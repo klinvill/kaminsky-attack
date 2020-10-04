@@ -6,3 +6,4 @@ mod hostname;
 mod message;
 mod question;
 mod resource_record;
+mod types;

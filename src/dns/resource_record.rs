@@ -1,9 +1,10 @@
 use crate::dns::hostname::Hostname;
+use crate::dns::types::Type;
 
 /// Resource record format as specified in IETF RFC 1035
 pub(crate) struct ResourceRecord<'record> {
     pub(crate) name: Hostname<'record>,
-    pub(crate) rtype: u16,
+    pub(crate) rtype: Type,
     pub(crate) class: u16,
     pub(crate) ttl: u32,
     pub(crate) rdlength: u16,
@@ -19,7 +20,7 @@ impl ResourceRecord<'_> {
     fn pack(&self) -> PackedResourceRecord {
         let mut packed = Vec::new();
         packed.extend(self.name.to_bytes());
-        packed.extend(&self.rtype.to_le_bytes());
+        packed.extend(&(self.rtype as u16).to_le_bytes());
         packed.extend(&self.class.to_le_bytes());
         packed.extend(&self.ttl.to_le_bytes());
         packed.extend(&self.rdlength.to_le_bytes());
@@ -36,12 +37,13 @@ impl ResourceRecord<'_> {
 mod tests {
     use crate::dns::hostname::Hostname;
     use crate::dns::resource_record::{PackedResourceRecord, ResourceRecord};
+    use crate::dns::types::Type;
 
     #[test]
     fn pack_resource_record() {
         let record = ResourceRecord {
             name: Hostname::from_string("www.example.com").unwrap(),
-            rtype: 1,
+            rtype: Type::A,
             class: 2,
             ttl: 0x258,
             rdlength: 4,
@@ -55,7 +57,7 @@ mod tests {
         expected_data.extend("example".as_bytes());
         expected_data.push(3);
         expected_data.extend("com".as_bytes());
-        expected_data.extend(&(1 as u16).to_le_bytes());
+        expected_data.extend(&(Type::A as u16).to_le_bytes());
         expected_data.extend(&(2 as u16).to_le_bytes());
         expected_data.extend(&(0x258 as u32).to_le_bytes());
         expected_data.extend(&(4 as u16).to_le_bytes());

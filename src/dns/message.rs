@@ -83,6 +83,7 @@ mod tests {
     use crate::dns::hostname::Hostname;
     use crate::dns::message::{Message, MessagePayload, ResponsePayload};
     use crate::dns::question::Question;
+    use crate::dns::types::Type;
 
     #[test]
     fn simple_question_to_bytes() {
@@ -104,7 +105,7 @@ mod tests {
 
         let question = Question {
             qname: Hostname::from_string("www.example.com").unwrap(),
-            qtype: 1,
+            qtype: Type::A,
             qclass: 2,
         };
 
@@ -124,7 +125,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(2 as u16).to_le_bytes());
 
         assert_eq!(expected, message.to_bytes());
@@ -151,12 +152,12 @@ mod tests {
         let questions = vec![
             Question {
                 qname: Hostname::from_string("www.example.com").unwrap(),
-                qtype: 1,
+                qtype: Type::A,
                 qclass: 2,
             },
             Question {
                 qname: Hostname::from_string("www.google.com").unwrap(),
-                qtype: 1,
+                qtype: Type::A,
                 qclass: 2,
             },
         ];
@@ -177,7 +178,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(2 as u16).to_le_bytes());
 
         // Question for www.google.com
@@ -187,7 +188,7 @@ mod tests {
         expected.extend("google".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(2 as u16).to_le_bytes());
 
         assert_eq!(expected, message.to_bytes());
@@ -197,7 +198,7 @@ mod tests {
     fn simple_answer_to_bytes() {
         let header = Header {
             id: 0xdb42,
-            qr: false,
+            qr: true,
             opcode: Opcode::QUERY,
             aa: false,
             tc: false,
@@ -213,7 +214,7 @@ mod tests {
 
         let answer = Answer {
             name: Hostname::from_string("www.example.com").unwrap(),
-            rtype: 1,
+            rtype: Type::A,
             class: 1,
             ttl: 0x258,
             rdlength: 4,
@@ -230,7 +231,7 @@ mod tests {
 
         let mut expected: Vec<u8> = vec![
             // Header
-            0x42, 0xdb, 0b10000000, 0b00000000, 0, 0, 1, 0, 0, 0, 0, 0,
+            0x42, 0xdb, 0b10000001, 0b00000000, 0, 0, 1, 0, 0, 0, 0, 0,
         ];
         // Answer
         expected.push(3);
@@ -239,7 +240,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(1 as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
         expected.extend(&(4 as u16).to_le_bytes());
@@ -252,7 +253,7 @@ mod tests {
     fn multiple_responses_to_bytes() {
         let header = Header {
             id: 0xdb42,
-            qr: false,
+            qr: true,
             opcode: Opcode::QUERY,
             aa: false,
             tc: false,
@@ -268,7 +269,7 @@ mod tests {
 
         let answer = Answer {
             name: Hostname::from_string("www.example.com").unwrap(),
-            rtype: 1,
+            rtype: Type::A,
             class: 1,
             ttl: 0x258,
             rdlength: 4,
@@ -277,7 +278,7 @@ mod tests {
 
         let authority = Authority {
             name: Hostname::from_string("example.com").unwrap(),
-            rtype: 2,
+            rtype: Type::NS,
             class: 1,
             ttl: 0x258,
             rdlength: 4,
@@ -286,7 +287,7 @@ mod tests {
 
         let additional = Additional {
             name: Hostname::from_string("www.other.com").unwrap(),
-            rtype: 1,
+            rtype: Type::A,
             class: 1,
             ttl: 0x258,
             rdlength: 4,
@@ -304,7 +305,7 @@ mod tests {
 
         let mut expected: Vec<u8> = vec![
             // Header
-            0x42, 0xdb, 0b10000000, 0b00000000, 0, 0, 1, 0, 0, 0, 0, 0,
+            0x42, 0xdb, 0b10000001, 0b00000000, 0, 0, 1, 0, 0, 0, 0, 0,
         ];
         // Answer
         expected.push(3);
@@ -313,7 +314,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(1 as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
         expected.extend(&(4 as u16).to_le_bytes());
@@ -324,7 +325,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
-        expected.extend(&(2 as u16).to_le_bytes());
+        expected.extend(&(Type::NS as u16).to_le_bytes());
         expected.extend(&(1 as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
         expected.extend(&(4 as u16).to_le_bytes());
@@ -337,7 +338,7 @@ mod tests {
         expected.extend("other".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(1 as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
         expected.extend(&(4 as u16).to_le_bytes());

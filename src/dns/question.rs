@@ -1,9 +1,10 @@
 use crate::dns::hostname::Hostname;
+use crate::dns::types::Type;
 
 /// DNS question section with fields as specified in IETF RFC 1035
 pub(crate) struct Question<'question> {
     pub(crate) qname: Hostname<'question>,
-    pub(crate) qtype: u16,
+    pub(crate) qtype: Type,
     pub(crate) qclass: u16,
 }
 
@@ -16,7 +17,7 @@ impl Question<'_> {
     fn pack(&self) -> PackedQuestion {
         let mut packed = Vec::new();
         packed.extend(self.qname.to_bytes());
-        packed.extend(&self.qtype.to_le_bytes());
+        packed.extend(&(self.qtype as u16).to_le_bytes());
         packed.extend(&self.qclass.to_le_bytes());
         return PackedQuestion { data: packed };
     }
@@ -30,12 +31,13 @@ impl Question<'_> {
 mod tests {
     use crate::dns::hostname::Hostname;
     use crate::dns::question::{PackedQuestion, Question};
+    use crate::dns::types::Type;
 
     #[test]
     fn pack_aligned_question() {
         let question = Question {
             qname: Hostname::from_string("www.example.com").unwrap(),
-            qtype: 1,
+            qtype: Type::A,
             qclass: 2,
         };
         let mut expected_data = Vec::new();
@@ -45,7 +47,7 @@ mod tests {
         expected_data.extend("example".as_bytes());
         expected_data.push(3);
         expected_data.extend("com".as_bytes());
-        expected_data.extend(&(1 as u16).to_le_bytes());
+        expected_data.extend(&(Type::A as u16).to_le_bytes());
         expected_data.extend(&(2 as u16).to_le_bytes());
         let expected = PackedQuestion {
             data: expected_data,
