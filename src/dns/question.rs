@@ -1,3 +1,4 @@
+use crate::dns::classes::Class;
 use crate::dns::hostname::Hostname;
 use crate::dns::types::Type;
 
@@ -5,7 +6,7 @@ use crate::dns::types::Type;
 pub(crate) struct Question<'question> {
     pub(crate) qname: Hostname<'question>,
     pub(crate) qtype: Type,
-    pub(crate) qclass: u16,
+    pub(crate) qclass: Class,
 }
 
 #[derive(PartialEq, Debug)]
@@ -18,7 +19,7 @@ impl Question<'_> {
         let mut packed = Vec::new();
         packed.extend(self.qname.to_bytes());
         packed.extend(&(self.qtype as u16).to_le_bytes());
-        packed.extend(&self.qclass.to_le_bytes());
+        packed.extend(&(self.qclass as u16).to_le_bytes());
         return PackedQuestion { data: packed };
     }
 
@@ -29,6 +30,7 @@ impl Question<'_> {
 
 #[cfg(test)]
 mod tests {
+    use crate::dns::classes::Class;
     use crate::dns::hostname::Hostname;
     use crate::dns::question::{PackedQuestion, Question};
     use crate::dns::types::Type;
@@ -38,7 +40,7 @@ mod tests {
         let question = Question {
             qname: Hostname::from_string("www.example.com").unwrap(),
             qtype: Type::A,
-            qclass: 2,
+            qclass: Class::IN,
         };
         let mut expected_data = Vec::new();
         expected_data.push(3);
@@ -48,7 +50,7 @@ mod tests {
         expected_data.push(3);
         expected_data.extend("com".as_bytes());
         expected_data.extend(&(Type::A as u16).to_le_bytes());
-        expected_data.extend(&(2 as u16).to_le_bytes());
+        expected_data.extend(&(Class::IN as u16).to_le_bytes());
         let expected = PackedQuestion {
             data: expected_data,
         };

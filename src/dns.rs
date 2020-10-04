@@ -1,6 +1,7 @@
 mod additional;
 mod answer;
 mod authority;
+mod classes;
 mod header;
 mod hostname;
 mod message;

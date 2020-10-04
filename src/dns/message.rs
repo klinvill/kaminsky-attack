@@ -79,6 +79,7 @@ mod tests {
     use crate::dns::additional::Additional;
     use crate::dns::answer::Answer;
     use crate::dns::authority::Authority;
+    use crate::dns::classes::Class;
     use crate::dns::header::{Header, Opcode};
     use crate::dns::hostname::Hostname;
     use crate::dns::message::{Message, MessagePayload, ResponsePayload};
@@ -106,7 +107,7 @@ mod tests {
         let question = Question {
             qname: Hostname::from_string("www.example.com").unwrap(),
             qtype: Type::A,
-            qclass: 2,
+            qclass: Class::IN,
         };
 
         let message = Message {
@@ -126,7 +127,7 @@ mod tests {
         expected.push(3);
         expected.extend("com".as_bytes());
         expected.extend(&(Type::A as u16).to_le_bytes());
-        expected.extend(&(2 as u16).to_le_bytes());
+        expected.extend(&(Class::IN as u16).to_le_bytes());
 
         assert_eq!(expected, message.to_bytes());
     }
@@ -153,12 +154,12 @@ mod tests {
             Question {
                 qname: Hostname::from_string("www.example.com").unwrap(),
                 qtype: Type::A,
-                qclass: 2,
+                qclass: Class::IN,
             },
             Question {
                 qname: Hostname::from_string("www.google.com").unwrap(),
                 qtype: Type::A,
-                qclass: 2,
+                qclass: Class::IN,
             },
         ];
 
@@ -179,7 +180,7 @@ mod tests {
         expected.push(3);
         expected.extend("com".as_bytes());
         expected.extend(&(Type::A as u16).to_le_bytes());
-        expected.extend(&(2 as u16).to_le_bytes());
+        expected.extend(&(Class::IN as u16).to_le_bytes());
 
         // Question for www.google.com
         expected.push(3);
@@ -189,7 +190,7 @@ mod tests {
         expected.push(3);
         expected.extend("com".as_bytes());
         expected.extend(&(Type::A as u16).to_le_bytes());
-        expected.extend(&(2 as u16).to_le_bytes());
+        expected.extend(&(Class::IN as u16).to_le_bytes());
 
         assert_eq!(expected, message.to_bytes());
     }
@@ -215,7 +216,7 @@ mod tests {
         let answer = Answer {
             name: Hostname::from_string("www.example.com").unwrap(),
             rtype: Type::A,
-            class: 1,
+            class: Class::IN,
             ttl: 0x258,
             rdlength: 4,
             rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
@@ -241,7 +242,7 @@ mod tests {
         expected.push(3);
         expected.extend("com".as_bytes());
         expected.extend(&(Type::A as u16).to_le_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Class::IN as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
         expected.extend(&(4 as u16).to_le_bytes());
         expected.extend(&(0x9b211144 as u32).to_le_bytes());
@@ -270,7 +271,7 @@ mod tests {
         let answer = Answer {
             name: Hostname::from_string("www.example.com").unwrap(),
             rtype: Type::A,
-            class: 1,
+            class: Class::IN,
             ttl: 0x258,
             rdlength: 4,
             rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
@@ -279,7 +280,7 @@ mod tests {
         let authority = Authority {
             name: Hostname::from_string("example.com").unwrap(),
             rtype: Type::NS,
-            class: 1,
+            class: Class::IN,
             ttl: 0x258,
             rdlength: 4,
             rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
@@ -288,7 +289,7 @@ mod tests {
         let additional = Additional {
             name: Hostname::from_string("www.other.com").unwrap(),
             rtype: Type::A,
-            class: 1,
+            class: Class::IN,
             ttl: 0x258,
             rdlength: 4,
             rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
@@ -315,7 +316,7 @@ mod tests {
         expected.push(3);
         expected.extend("com".as_bytes());
         expected.extend(&(Type::A as u16).to_le_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Class::IN as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
         expected.extend(&(4 as u16).to_le_bytes());
         expected.extend(&(0x9b211144 as u32).to_le_bytes());
@@ -326,7 +327,7 @@ mod tests {
         expected.push(3);
         expected.extend("com".as_bytes());
         expected.extend(&(Type::NS as u16).to_le_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Class::IN as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
         expected.extend(&(4 as u16).to_le_bytes());
         expected.extend(&(0x9b211144 as u32).to_le_bytes());
@@ -339,7 +340,7 @@ mod tests {
         expected.push(3);
         expected.extend("com".as_bytes());
         expected.extend(&(Type::A as u16).to_le_bytes());
-        expected.extend(&(1 as u16).to_le_bytes());
+        expected.extend(&(Class::IN as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
         expected.extend(&(4 as u16).to_le_bytes());
         expected.extend(&(0x9b211144 as u32).to_le_bytes());

@@ -1,3 +1,4 @@
+use crate::dns::classes::Class;
 use crate::dns::hostname::Hostname;
 use crate::dns::types::Type;
 
@@ -5,7 +6,7 @@ use crate::dns::types::Type;
 pub(crate) struct ResourceRecord<'record> {
     pub(crate) name: Hostname<'record>,
     pub(crate) rtype: Type,
-    pub(crate) class: u16,
+    pub(crate) class: Class,
     pub(crate) ttl: u32,
     pub(crate) rdlength: u16,
     pub(crate) rdata: Vec<u8>,
@@ -21,7 +22,7 @@ impl ResourceRecord<'_> {
         let mut packed = Vec::new();
         packed.extend(self.name.to_bytes());
         packed.extend(&(self.rtype as u16).to_le_bytes());
-        packed.extend(&self.class.to_le_bytes());
+        packed.extend(&(self.class as u16).to_le_bytes());
         packed.extend(&self.ttl.to_le_bytes());
         packed.extend(&self.rdlength.to_le_bytes());
         packed.extend(&self.rdata);
@@ -35,6 +36,7 @@ impl ResourceRecord<'_> {
 
 #[cfg(test)]
 mod tests {
+    use crate::dns::classes::Class;
     use crate::dns::hostname::Hostname;
     use crate::dns::resource_record::{PackedResourceRecord, ResourceRecord};
     use crate::dns::types::Type;
@@ -44,7 +46,7 @@ mod tests {
         let record = ResourceRecord {
             name: Hostname::from_string("www.example.com").unwrap(),
             rtype: Type::A,
-            class: 2,
+            class: Class::IN,
             ttl: 0x258,
             rdlength: 4,
             rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
@@ -58,7 +60,7 @@ mod tests {
         expected_data.push(3);
         expected_data.extend("com".as_bytes());
         expected_data.extend(&(Type::A as u16).to_le_bytes());
-        expected_data.extend(&(2 as u16).to_le_bytes());
+        expected_data.extend(&(Class::IN as u16).to_le_bytes());
         expected_data.extend(&(0x258 as u32).to_le_bytes());
         expected_data.extend(&(4 as u16).to_le_bytes());
         expected_data.extend(&(0x9b211144 as u32).to_le_bytes());
