@@ -1,4 +1,7 @@
 #[derive(PartialEq, Debug)]
+/// Hostname format as specified in IETF RFC 1035
+///
+/// This format is used for the *NAME fields
 pub struct Hostname<'hostname>(Vec<HostnameLabel<'hostname>>);
 
 #[derive(PartialEq, Debug)]
