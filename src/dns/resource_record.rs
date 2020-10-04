@@ -1,13 +1,13 @@
 use crate::dns::hostname::Hostname;
 
 /// Resource record format as specified in IETF RFC 1035
-pub struct ResourceRecord<'record> {
-    name: Hostname<'record>,
-    rtype: u16,
-    class: u16,
-    ttl: u32,
-    rdlength: u16,
-    rdata: Vec<u8>,
+pub(crate) struct ResourceRecord<'record> {
+    pub(crate) name: Hostname<'record>,
+    pub(crate) rtype: u16,
+    pub(crate) class: u16,
+    pub(crate) ttl: u32,
+    pub(crate) rdlength: u16,
+    pub(crate) rdata: Vec<u8>,
 }
 
 #[derive(PartialEq, Debug)]
@@ -26,6 +26,10 @@ impl ResourceRecord<'_> {
         packed.extend(&self.rdata);
         return PackedResourceRecord { data: packed };
     }
+
+    pub(crate) fn to_bytes(&self) -> Vec<u8> {
+        return self.pack().data;
+    }
 }
 
 #[cfg(test)]
@@ -35,7 +39,7 @@ mod tests {
 
     #[test]
     fn pack_resource_record() {
-        let question = ResourceRecord {
+        let record = ResourceRecord {
             name: Hostname::from_string("www.example.com").unwrap(),
             rtype: 1,
             class: 2,
@@ -59,6 +63,6 @@ mod tests {
         let expected = PackedResourceRecord {
             data: expected_data,
         };
-        assert_eq!(expected, question.pack())
+        assert_eq!(expected, record.pack())
     }
 }

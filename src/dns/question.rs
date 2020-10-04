@@ -1,10 +1,10 @@
 use crate::dns::hostname::Hostname;
 
 /// DNS question section with fields as specified in IETF RFC 1035
-struct Question<'question> {
-    qname: Hostname<'question>,
-    qtype: u16,
-    qclass: u16,
+pub(crate) struct Question<'question> {
+    pub(crate) qname: Hostname<'question>,
+    pub(crate) qtype: u16,
+    pub(crate) qclass: u16,
 }
 
 #[derive(PartialEq, Debug)]
@@ -19,6 +19,10 @@ impl Question<'_> {
         packed.extend(&self.qtype.to_le_bytes());
         packed.extend(&self.qclass.to_le_bytes());
         return PackedQuestion { data: packed };
+    }
+
+    pub(crate) fn to_bytes(&self) -> Vec<u8> {
+        return self.pack().data;
     }
 }
 

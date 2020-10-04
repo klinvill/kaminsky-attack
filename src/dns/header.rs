@@ -2,20 +2,20 @@
 ///
 /// This struct does not layout the bits exactly as specified in RFC 1035. Instead it needs to be
 /// converted to a packed_header
-struct Header {
-    id: u16,
-    qr: bool,
-    opcode: Opcode,
-    aa: bool,
-    tc: bool,
-    rd: bool,
-    ra: bool,
-    z: u8,     // ideally u3
-    rcode: u8, // ideally u4
-    qdcount: u16,
-    ancount: u16,
-    nscount: u16,
-    arcount: u16,
+pub(crate) struct Header {
+    pub(crate) id: u16,
+    pub(crate) qr: bool,
+    pub(crate) opcode: Opcode,
+    pub(crate) aa: bool,
+    pub(crate) tc: bool,
+    pub(crate) rd: bool,
+    pub(crate) ra: bool,
+    pub(crate) z: u8,     // ideally u3
+    pub(crate) rcode: u8, // ideally u4
+    pub(crate) qdcount: u16,
+    pub(crate) ancount: u16,
+    pub(crate) nscount: u16,
+    pub(crate) arcount: u16,
 }
 
 #[derive(PartialEq, Debug)]
@@ -27,7 +27,7 @@ struct PackedHeader {
 #[repr(u8)]
 #[derive(Copy, Clone)]
 /// Opcode as specified in RFC 1035
-enum Opcode {
+pub(crate) enum Opcode {
     QUERY = 0,
     IQUERY = 1,
     STATUS = 2,
@@ -53,6 +53,15 @@ impl Header {
                 self.arcount,
             ],
         };
+    }
+
+    pub(crate) fn to_bytes(&self) -> Vec<u8> {
+        return self
+            .pack()
+            .data
+            .iter()
+            .flat_map(|entry| return entry.to_le_bytes().to_vec())
+            .collect();
     }
 }
 
@@ -82,5 +91,27 @@ mod tests {
             data: [0xdb42, 0b0011000010000000, 1, 2, 3, 4],
         };
         assert_eq!(expected, header.pack());
+    }
+
+    #[test]
+    fn simple_header_to_bytes() {
+        let header = Header {
+            id: 0xdb42,
+            qr: false,
+            opcode: Opcode::QUERY,
+            aa: false,
+            tc: false,
+            rd: true,
+            ra: false,
+            z: 7, // z should be ignored since RFC 1035 specifies it set to 0
+            rcode: 3,
+            qdcount: 1,
+            ancount: 2,
+            nscount: 3,
+            arcount: 4,
+        };
+
+        let expected: Vec<u8> = vec![0x42, 0xdb, 0b10000000, 0b00110000, 1, 0, 2, 0, 3, 0, 4, 0];
+        assert_eq!(expected, header.to_bytes());
     }
 }

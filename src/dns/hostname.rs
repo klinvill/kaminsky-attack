@@ -28,6 +28,7 @@ impl Hostname<'_> {
             hostname
                 .split('.')
                 .map(|label| {
+                    // TODO: labels are restricted to 63 octets or less as per RFC 1035
                     return HostnameLabel {
                         length: label.len() as u8,
                         label,
