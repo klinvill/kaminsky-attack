@@ -56,7 +56,6 @@ impl Header {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use crate::dns::header::{Header, Opcode, PackedHeader};
@@ -71,7 +70,7 @@ mod tests {
             tc: false,
             rd: true,
             ra: false,
-            z: 7,   // z should be ignored since RFC 1035 specifies it set to 0
+            z: 7, // z should be ignored since RFC 1035 specifies it set to 0
             rcode: 3,
             qdcount: 1,
             ancount: 2,
@@ -79,7 +78,9 @@ mod tests {
             arcount: 4,
         };
 
-        let expected = PackedHeader { data: [0xdb42, 0b0011000010000000, 1, 2, 3, 4] };
+        let expected = PackedHeader {
+            data: [0xdb42, 0b0011000010000000, 1, 2, 3, 4],
+        };
         assert_eq!(expected, header.pack());
     }
 }
