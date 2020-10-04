@@ -1,7 +1,7 @@
 use crate::dns::hostname::Hostname;
 
 /// Resource record format as specified in IETF RFC 1035
-struct ResourceRecord<'record> {
+pub struct ResourceRecord<'record> {
     name: Hostname<'record>,
     rtype: u16,
     class: u16,
