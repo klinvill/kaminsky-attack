@@ -12,8 +12,8 @@ struct HostnameLabel {
 
 pub(crate) struct ParsedHostname {
     /// Number of buffer bytes parsed to construct a hostname
-    parsed_bytes: u8,
-    hostname: Hostname,
+    pub(crate) parsed_bytes: u8,
+    pub(crate) hostname: Hostname,
 }
 
 impl HostnameLabel {

@@ -1,5 +1,7 @@
+use num_derive::FromPrimitive;
+
 #[repr(u16)]
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(FromPrimitive, PartialEq, Debug, Copy, Clone)]
 /// Subset of TYPE values specified in IETF RFC 1035
 pub(crate) enum Type {
     A = 1,
