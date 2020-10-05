@@ -12,23 +12,23 @@ pub(crate) trait Message {
 ///
 /// For this implementation I took the liberty of making the question and resource record sections mutually exclusive
 #[derive(PartialEq, Debug)]
-pub(crate) struct QuestionMessage<'message> {
+pub(crate) struct QuestionMessage {
     pub(crate) header: Header,
-    pub(crate) questions: Vec<Question<'message>>,
+    pub(crate) questions: Vec<Question>,
 }
 
 /// DNS response message, mostly as specified in IETF RFC 1035
 ///
 /// For this implementation I took the liberty of making the question and resource record sections mutually exclusive
 #[derive(PartialEq, Debug)]
-pub(crate) struct ResponseMessage<'message> {
+pub(crate) struct ResponseMessage {
     pub(crate) header: Header,
-    pub(crate) answers: Vec<Answer<'message>>,
-    pub(crate) authorities: Vec<Authority<'message>>,
-    pub(crate) additionals: Vec<Additional<'message>>,
+    pub(crate) answers: Vec<Answer>,
+    pub(crate) authorities: Vec<Authority>,
+    pub(crate) additionals: Vec<Additional>,
 }
 
-impl Message for QuestionMessage<'_> {
+impl Message for QuestionMessage {
     fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend(self.header.to_bytes());
@@ -37,8 +37,8 @@ impl Message for QuestionMessage<'_> {
     }
 }
 
-impl ResponseMessage<'_> {
-    fn new<'message>(header: Header) -> ResponseMessage<'message> {
+impl ResponseMessage {
+    fn new(header: Header) -> ResponseMessage {
         return ResponseMessage {
             header,
             answers: Vec::new(),
@@ -48,7 +48,7 @@ impl ResponseMessage<'_> {
     }
 }
 
-impl Message for ResponseMessage<'_> {
+impl Message for ResponseMessage {
     fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend(self.header.to_bytes());
@@ -111,6 +111,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
+        expected.push(0);
         expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(Class::IN as u16).to_le_bytes());
 
@@ -161,6 +162,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
+        expected.push(0);
         expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(Class::IN as u16).to_le_bytes());
 
@@ -171,6 +173,7 @@ mod tests {
         expected.extend("google".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
+        expected.push(0);
         expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(Class::IN as u16).to_le_bytes());
 
@@ -220,6 +223,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
+        expected.push(0);
         expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(Class::IN as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
@@ -292,6 +296,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
+        expected.push(0);
         expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(Class::IN as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
@@ -303,6 +308,7 @@ mod tests {
         expected.extend("example".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
+        expected.push(0);
         expected.extend(&(Type::NS as u16).to_le_bytes());
         expected.extend(&(Class::IN as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());
@@ -316,6 +322,7 @@ mod tests {
         expected.extend("other".as_bytes());
         expected.push(3);
         expected.extend("com".as_bytes());
+        expected.push(0);
         expected.extend(&(Type::A as u16).to_le_bytes());
         expected.extend(&(Class::IN as u16).to_le_bytes());
         expected.extend(&(0x258 as u32).to_le_bytes());

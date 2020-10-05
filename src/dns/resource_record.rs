@@ -4,8 +4,8 @@ use crate::dns::types::Type;
 
 #[derive(PartialEq, Debug)]
 /// Resource record format as specified in IETF RFC 1035
-pub(crate) struct ResourceRecord<'record> {
-    pub(crate) name: Hostname<'record>,
+pub(crate) struct ResourceRecord {
+    pub(crate) name: Hostname,
     pub(crate) rtype: Type,
     pub(crate) class: Class,
     pub(crate) ttl: u32,
@@ -18,7 +18,7 @@ struct PackedResourceRecord {
     data: Vec<u8>,
 }
 
-impl ResourceRecord<'_> {
+impl ResourceRecord {
     fn pack(&self) -> PackedResourceRecord {
         let mut packed = Vec::new();
         packed.extend(self.name.to_bytes());
@@ -60,6 +60,7 @@ mod tests {
         expected_data.extend("example".as_bytes());
         expected_data.push(3);
         expected_data.extend("com".as_bytes());
+        expected_data.push(0);
         expected_data.extend(&(Type::A as u16).to_le_bytes());
         expected_data.extend(&(Class::IN as u16).to_le_bytes());
         expected_data.extend(&(0x258 as u32).to_le_bytes());

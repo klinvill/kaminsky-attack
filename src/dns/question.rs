@@ -4,8 +4,8 @@ use crate::dns::types::Type;
 
 #[derive(PartialEq, Debug)]
 /// DNS question section with fields as specified in IETF RFC 1035
-pub(crate) struct Question<'question> {
-    pub(crate) qname: Hostname<'question>,
+pub(crate) struct Question {
+    pub(crate) qname: Hostname,
     pub(crate) qtype: Type,
     pub(crate) qclass: Class,
 }
@@ -15,7 +15,7 @@ struct PackedQuestion {
     data: Vec<u8>,
 }
 
-impl Question<'_> {
+impl Question {
     fn pack(&self) -> PackedQuestion {
         let mut packed = Vec::new();
         packed.extend(self.qname.to_bytes());
@@ -50,6 +50,7 @@ mod tests {
         expected_data.extend("example".as_bytes());
         expected_data.push(3);
         expected_data.extend("com".as_bytes());
+        expected_data.push(0);
         expected_data.extend(&(Type::A as u16).to_le_bytes());
         expected_data.extend(&(Class::IN as u16).to_le_bytes());
         let expected = PackedQuestion {
