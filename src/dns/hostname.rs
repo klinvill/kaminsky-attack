@@ -20,9 +20,9 @@ impl HostnameLabel<'_> {
 }
 
 impl Hostname<'_> {
-    pub fn from_string(hostname: &str) -> Result<Hostname, &'static str> {
+    pub fn from_string(hostname: &str) -> Result<Hostname, String> {
         if !valid_hostname(hostname) {
-            return Err("Invalid hostname");
+            return Err("Invalid hostname".to_string());
         }
         return Ok(Hostname(
             hostname

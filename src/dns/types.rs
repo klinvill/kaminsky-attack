@@ -1,5 +1,5 @@
 #[repr(u16)]
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 /// Subset of TYPE values specified in IETF RFC 1035
 pub(crate) enum Type {
     A = 1,

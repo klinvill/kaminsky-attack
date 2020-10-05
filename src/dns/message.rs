@@ -4,24 +4,26 @@ use crate::dns::authority::Authority;
 use crate::dns::header::Header;
 use crate::dns::question::Question;
 
-#[derive(Default)]
-struct ResponsePayload<'payload> {
+#[derive(PartialEq, Debug, Default)]
+pub(crate) struct ResponsePayload<'payload> {
     answers: Option<Vec<Answer<'payload>>>,
     authorities: Option<Vec<Authority<'payload>>>,
     additionals: Option<Vec<Additional<'payload>>>,
 }
 
-enum MessagePayload<'payload> {
+#[derive(PartialEq, Debug)]
+pub(crate) enum MessagePayload<'payload> {
     QUESTIONS(Vec<Question<'payload>>),
     RESPONSES(ResponsePayload<'payload>),
 }
 
+#[derive(PartialEq, Debug)]
 /// DNS message format, mostly as specified in IETF RFC 1035
 ///
 /// For this implementation I took the liberty of making the question and resource record sections mutually exclusive
-struct Message<'message> {
-    header: Header,
-    payload: MessagePayload<'message>,
+pub(crate) struct Message<'message> {
+    pub(crate) header: Header,
+    pub(crate) payload: MessagePayload<'message>,
 }
 
 impl Message<'_> {

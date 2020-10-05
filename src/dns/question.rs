@@ -2,6 +2,7 @@ use crate::dns::classes::Class;
 use crate::dns::hostname::Hostname;
 use crate::dns::types::Type;
 
+#[derive(PartialEq, Debug)]
 /// DNS question section with fields as specified in IETF RFC 1035
 pub(crate) struct Question<'question> {
     pub(crate) qname: Hostname<'question>,

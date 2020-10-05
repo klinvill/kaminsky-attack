@@ -2,6 +2,7 @@ use crate::dns::classes::Class;
 use crate::dns::hostname::Hostname;
 use crate::dns::types::Type;
 
+#[derive(PartialEq, Debug)]
 /// Resource record format as specified in IETF RFC 1035
 pub(crate) struct ResourceRecord<'record> {
     pub(crate) name: Hostname<'record>,

@@ -5,6 +5,7 @@ mod classes;
 mod header;
 mod hostname;
 mod message;
+mod query;
 mod question;
 mod resource_record;
 mod types;

@@ -1,3 +1,4 @@
+#[derive(PartialEq, Debug)]
 /// DNS Header with fields as specified in IETF RFC 1035
 ///
 /// This struct does not layout the bits exactly as specified in RFC 1035. Instead it needs to be
@@ -25,7 +26,7 @@ struct PackedHeader {
 }
 
 #[repr(u8)]
-#[derive(Copy, Clone)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 /// Opcode as specified in RFC 1035
 pub(crate) enum Opcode {
     QUERY = 0,
