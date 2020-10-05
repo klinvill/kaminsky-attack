@@ -136,7 +136,7 @@ impl Header {
     fn from_bytes(buffer: &[u8]) -> Result<Header, String> {
         let packed_flags =
             u16::from_le_bytes([buffer[FIELD_FLAGS.offset], buffer[FIELD_FLAGS.offset + 1]]);
-        let opcode_int = packed_flags & BITMASKS[FLAG_OPCODE.width] >> FLAG_OPCODE.offset;
+        let opcode_int = (packed_flags & BITMASKS[FLAG_OPCODE.width]) >> FLAG_OPCODE.offset;
         let opcode = match Opcode::from_u16(opcode_int) {
             None => return Err(format!("Unsupported opcode {}", opcode_int)),
             Some(op) => op,
@@ -258,6 +258,39 @@ mod tests {
             ancount: 2,
             nscount: 3,
             arcount: 4,
+        };
+
+        let result = Header::parse(bytes.as_slice()).unwrap();
+        assert_eq!(header_length, result.parsed_bytes as usize);
+        assert_eq!(expected_header, result.header);
+    }
+
+    #[test]
+    fn parse_rd_header() {
+        let extra_bytes = (0x12345678 as u32).to_le_bytes();
+
+        let mut bytes: Vec<u8> = vec![
+            // Header
+            0x42, 0xdb, 0b10000001, 0b00000000, 0, 0, 1, 0, 0, 0, 0, 0,
+        ];
+        bytes.extend(&extra_bytes);
+
+        let header_length: usize = 12;
+
+        let expected_header = Header {
+            id: 0xdb42,
+            qr: true,
+            opcode: Opcode::QUERY,
+            aa: false,
+            tc: false,
+            rd: true,
+            ra: false,
+            z: 0, // z should always be 0 as per RFC 1035
+            rcode: 0,
+            qdcount: 0,
+            ancount: 1,
+            nscount: 0,
+            arcount: 0,
         };
 
         let result = Header::parse(bytes.as_slice()).unwrap();
