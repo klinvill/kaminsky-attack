@@ -1,7 +1,7 @@
 use crate::dns::classes::Class;
 use crate::dns::header::{Header, Opcode};
 use crate::dns::hostname::Hostname;
-use crate::dns::message::{Message, MessagePayload};
+use crate::dns::message::QuestionMessage;
 use crate::dns::question::Question;
 use crate::dns::types::Type;
 use rand;
@@ -11,7 +11,7 @@ fn build_query(
     qtype: Option<Type>,
     opcode: Option<Opcode>,
     recursion_desired: Option<bool>,
-) -> Result<Message, String> {
+) -> Result<QuestionMessage, String> {
     let id = rand::random::<u16>();
 
     if hostnames.len() > u16::max_value() as usize {
@@ -50,9 +50,9 @@ fn build_query(
         })
         .collect();
 
-    let message = Message {
+    let message = QuestionMessage {
         header,
-        payload: MessagePayload::QUESTIONS(questions?),
+        questions: questions?,
     };
 
     return Ok(message);
@@ -63,7 +63,7 @@ mod tests {
     use crate::dns::classes::Class;
     use crate::dns::header::{Header, Opcode};
     use crate::dns::hostname::Hostname;
-    use crate::dns::message::{Message, MessagePayload};
+    use crate::dns::message::QuestionMessage;
     use crate::dns::query::build_query;
     use crate::dns::question::Question;
     use crate::dns::types::Type;
@@ -73,7 +73,7 @@ mod tests {
         // TODO: How should optional function arguments be declared and supplied?
         let message = build_query(vec!["www.example.com"], None, None, None).unwrap();
 
-        let expected = Message {
+        let expected = QuestionMessage {
             header: Header {
                 id: message.header.id,
                 qr: false,
@@ -89,11 +89,11 @@ mod tests {
                 nscount: 0,
                 arcount: 0,
             },
-            payload: MessagePayload::QUESTIONS(vec![Question {
+            questions: vec![Question {
                 qname: Hostname::from_string("www.example.com").unwrap(),
                 qtype: Type::A,
                 qclass: Class::IN,
-            }]),
+            }],
         };
 
         assert_eq!(expected, message);

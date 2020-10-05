@@ -4,74 +4,57 @@ use crate::dns::authority::Authority;
 use crate::dns::header::Header;
 use crate::dns::question::Question;
 
-#[derive(PartialEq, Debug, Default)]
-pub(crate) struct ResponsePayload<'payload> {
-    answers: Option<Vec<Answer<'payload>>>,
-    authorities: Option<Vec<Authority<'payload>>>,
-    additionals: Option<Vec<Additional<'payload>>>,
+pub(crate) trait Message {
+    fn to_bytes(&self) -> Vec<u8>;
 }
 
-#[derive(PartialEq, Debug)]
-pub(crate) enum MessagePayload<'payload> {
-    QUESTIONS(Vec<Question<'payload>>),
-    RESPONSES(ResponsePayload<'payload>),
-}
-
-#[derive(PartialEq, Debug)]
-/// DNS message format, mostly as specified in IETF RFC 1035
+/// DNS question message, mostly as specified in IETF RFC 1035
 ///
 /// For this implementation I took the liberty of making the question and resource record sections mutually exclusive
-pub(crate) struct Message<'message> {
+#[derive(PartialEq, Debug)]
+pub(crate) struct QuestionMessage<'message> {
     pub(crate) header: Header,
-    pub(crate) payload: MessagePayload<'message>,
+    pub(crate) questions: Vec<Question<'message>>,
 }
 
-impl Message<'_> {
+/// DNS response message, mostly as specified in IETF RFC 1035
+///
+/// For this implementation I took the liberty of making the question and resource record sections mutually exclusive
+#[derive(PartialEq, Debug)]
+pub(crate) struct ResponseMessage<'message> {
+    pub(crate) header: Header,
+    pub(crate) answers: Vec<Answer<'message>>,
+    pub(crate) authorities: Vec<Authority<'message>>,
+    pub(crate) additionals: Vec<Additional<'message>>,
+}
+
+impl Message for QuestionMessage<'_> {
     fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend(self.header.to_bytes());
-        bytes.extend(self.payload.to_bytes());
-
+        bytes.extend(self.questions.iter().flat_map(|q| q.to_bytes()));
         return bytes;
     }
 }
 
-impl MessagePayload<'_> {
-    fn to_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::new();
-        match self {
-            MessagePayload::QUESTIONS(qs) => bytes.extend(qs.iter().flat_map(|q| q.to_bytes())),
-            MessagePayload::RESPONSES(rs) => bytes.extend(rs.to_bytes()),
-        }
-
-        return bytes;
+impl ResponseMessage<'_> {
+    fn new<'message>(header: Header) -> ResponseMessage<'message> {
+        return ResponseMessage {
+            header,
+            answers: Vec::new(),
+            authorities: Vec::new(),
+            additionals: Vec::new(),
+        };
     }
 }
 
-impl ResponsePayload<'_> {
+impl Message for ResponseMessage<'_> {
     fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
-        bytes.extend(
-            self.answers
-                .as_ref()
-                .unwrap_or(&Vec::new())
-                .iter()
-                .flat_map(|ans| ans.to_bytes()),
-        );
-        bytes.extend(
-            self.authorities
-                .as_ref()
-                .unwrap_or(&Vec::new())
-                .iter()
-                .flat_map(|au| au.to_bytes()),
-        );
-        bytes.extend(
-            self.additionals
-                .as_ref()
-                .unwrap_or(&Vec::new())
-                .iter()
-                .flat_map(|ad| ad.to_bytes()),
-        );
+        bytes.extend(self.header.to_bytes());
+        bytes.extend(self.answers.iter().flat_map(|q| q.to_bytes()));
+        bytes.extend(self.authorities.iter().flat_map(|q| q.to_bytes()));
+        bytes.extend(self.additionals.iter().flat_map(|q| q.to_bytes()));
         return bytes;
     }
 }
@@ -84,7 +67,7 @@ mod tests {
     use crate::dns::classes::Class;
     use crate::dns::header::{Header, Opcode};
     use crate::dns::hostname::Hostname;
-    use crate::dns::message::{Message, MessagePayload, ResponsePayload};
+    use crate::dns::message::{Message, QuestionMessage, ResponseMessage};
     use crate::dns::question::Question;
     use crate::dns::types::Type;
 
@@ -112,9 +95,9 @@ mod tests {
             qclass: Class::IN,
         };
 
-        let message = Message {
+        let message = QuestionMessage {
             header,
-            payload: MessagePayload::QUESTIONS(vec![question]),
+            questions: vec![question],
         };
 
         let mut expected: Vec<u8> = vec![
@@ -165,10 +148,7 @@ mod tests {
             },
         ];
 
-        let message = Message {
-            header,
-            payload: MessagePayload::QUESTIONS(questions),
-        };
+        let message = QuestionMessage { header, questions };
 
         let mut expected: Vec<u8> = vec![
             // Header
@@ -224,12 +204,9 @@ mod tests {
             rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
         };
 
-        let message = Message {
-            header,
-            payload: MessagePayload::RESPONSES(ResponsePayload {
-                answers: Some(vec![answer]),
-                ..ResponsePayload::default()
-            }),
+        let message = ResponseMessage {
+            answers: vec![answer],
+            ..ResponseMessage::new(header)
         };
 
         let mut expected: Vec<u8> = vec![
@@ -297,13 +274,11 @@ mod tests {
             rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
         };
 
-        let message = Message {
+        let message = ResponseMessage {
             header,
-            payload: MessagePayload::RESPONSES(ResponsePayload {
-                answers: Some(vec![answer]),
-                authorities: Some(vec![authority]),
-                additionals: Some(vec![additional]),
-            }),
+            answers: vec![answer],
+            authorities: vec![authority],
+            additionals: vec![additional],
         };
 
         let mut expected: Vec<u8> = vec![
