@@ -17,7 +17,7 @@ struct PackedQuestion {
 }
 
 pub(crate) struct ParsedQuestion {
-    /// Number of buffer bytes parsed to construct a hostname
+    /// Number of buffer bytes parsed to construct a question
     pub(crate) parsed_bytes: u8,
     pub(crate) question: Question,
 }
