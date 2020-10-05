@@ -30,8 +30,8 @@ struct PackedHeader {
 
 pub(crate) struct ParsedHeader {
     /// Number of buffer bytes parsed to construct the header
-    parsed_bytes: usize,
-    header: Header,
+    pub(crate) parsed_bytes: usize,
+    pub(crate) header: Header,
 }
 
 /// Field in header
