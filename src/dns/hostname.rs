@@ -148,6 +148,8 @@ mod tests {
 
     #[test]
     fn parse_simple_hostname() {
+        let extra_bytes = (0x12345678 as u32).to_le_bytes();
+
         let mut bytes: Vec<u8> = Vec::new();
         bytes.push(3);
         bytes.extend("www".as_bytes());
@@ -156,6 +158,9 @@ mod tests {
         bytes.push(3);
         bytes.extend("com".as_bytes());
         bytes.push(0);
+        bytes.extend(&extra_bytes);
+
+        let hostname_length = bytes.len() - extra_bytes.len();
 
         let expected = Hostname(vec![
             HostnameLabel {
@@ -175,6 +180,6 @@ mod tests {
         let result = Hostname::parse(bytes.as_slice()).unwrap();
 
         assert_eq!(expected, result.hostname);
-        assert_eq!(bytes.len() as u8, result.parsed_bytes);
+        assert_eq!(hostname_length, result.parsed_bytes as usize);
     }
 }

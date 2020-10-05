@@ -237,7 +237,13 @@ mod tests {
 
     #[test]
     fn parse_simple_header() {
-        let bytes: [u8; 12] = [0x42, 0xdb, 0b10000000, 0b00110000, 1, 0, 2, 0, 3, 0, 4, 0];
+        let extra_bytes = (0x12345678 as u32).to_le_bytes();
+
+        let mut bytes: Vec<u8> = vec![0x42, 0xdb, 0b10000000, 0b00110000, 1, 0, 2, 0, 3, 0, 4, 0];
+        bytes.extend(&extra_bytes);
+
+        let header_length: usize = 12;
+
         let expected_header = Header {
             id: 0xdb42,
             qr: false,
@@ -254,8 +260,8 @@ mod tests {
             arcount: 4,
         };
 
-        let result = Header::parse(&bytes).unwrap();
-        assert_eq!(12, result.parsed_bytes);
+        let result = Header::parse(bytes.as_slice()).unwrap();
+        assert_eq!(header_length, result.parsed_bytes as usize);
         assert_eq!(expected_header, result.header);
     }
 

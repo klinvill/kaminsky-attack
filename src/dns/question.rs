@@ -102,6 +102,8 @@ mod tests {
 
     #[test]
     fn parse_question() {
+        let extra_bytes = (0x12345678 as u32).to_le_bytes();
+
         let mut bytes: Vec<u8> = Vec::new();
         bytes.push(3);
         bytes.extend("www".as_bytes());
@@ -112,6 +114,9 @@ mod tests {
         bytes.push(0);
         bytes.extend(&(Type::A as u16).to_le_bytes());
         bytes.extend(&(Class::IN as u16).to_le_bytes());
+        bytes.extend(&extra_bytes);
+
+        let question_length = bytes.len() - extra_bytes.len();
 
         let expected = Question {
             qname: Hostname::from_string("www.example.com").unwrap(),
@@ -122,6 +127,6 @@ mod tests {
         let result = Question::parse(bytes.as_slice()).unwrap();
 
         assert_eq!(expected, result.question);
-        assert_eq!(bytes.len(), result.parsed_bytes as usize);
+        assert_eq!(question_length, result.parsed_bytes as usize);
     }
 }
