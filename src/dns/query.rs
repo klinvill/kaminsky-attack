@@ -19,7 +19,7 @@ impl Query {
             hostnames,
             qtype: Type::A,
             opcode: Opcode::QUERY,
-            recursion_desired: false,
+            recursion_desired: true,
         };
     }
 
@@ -93,7 +93,7 @@ mod tests {
                 opcode: Opcode::QUERY,
                 aa: false,
                 tc: false,
-                rd: false,
+                rd: true,
                 ra: false,
                 z: 0,
                 rcode: 0,
