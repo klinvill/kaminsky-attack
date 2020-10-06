@@ -1,37 +1,31 @@
-use std::fmt;
-use std::fmt::Debug;
-
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 /// Hostname format as specified in IETF RFC 1035
 ///
 /// This format is used for the *NAME fields
-pub struct Hostname(Vec<Box<dyn Label>>);
+pub struct Hostname(Vec<Label>);
 
-trait Label {
-    fn to_bytes(&self) -> Vec<u8>;
-    fn repr(&self) -> String;
-    fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+#[derive(PartialEq, Clone, Debug)]
+enum Label {
+    NORMAL(HostnameLabel),
+    COMPRESSED(CompressedHostnameLabel),
 }
 
-impl PartialEq for dyn Label {
-    fn eq(&self, other: &Self) -> bool {
-        return self.repr() == other.repr();
+impl Label {
+    fn to_bytes(&self) -> Vec<u8> {
+        return match self {
+            Label::NORMAL(label) => label.to_bytes(),
+            Label::COMPRESSED(label) => label.to_bytes(),
+        };
     }
 }
 
-impl fmt::Debug for dyn Label {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        return self.format(f);
-    }
-}
-
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 struct HostnameLabel {
     length: u8,
     label: String,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 struct CompressedHostnameLabel {
     pointer: u16,
 }
@@ -42,20 +36,12 @@ pub(crate) struct ParsedHostname {
     pub(crate) hostname: Hostname,
 }
 
-impl Label for HostnameLabel {
+impl HostnameLabel {
     fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.push(self.length);
         bytes.extend(self.label.bytes());
         return bytes;
-    }
-
-    fn repr(&self) -> String {
-        return format!("{}_{}", self.length, self.label);
-    }
-
-    fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        return self.fmt(f);
     }
 }
 
@@ -63,16 +49,10 @@ impl Label for HostnameLabel {
 const COMPRESSED_MASK: u16 = 0xc000;
 const COMPRESSED_INDICATOR: u16 = 0xc000;
 
-impl Label for CompressedHostnameLabel {
+impl CompressedHostnameLabel {
     fn to_bytes(&self) -> Vec<u8> {
         let packed_value = COMPRESSED_INDICATOR ^ self.pointer;
         return packed_value.to_be_bytes().to_vec();
-    }
-    fn repr(&self) -> String {
-        return format!("{}", self.pointer);
-    }
-    fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        return self.fmt(f);
     }
 }
 
@@ -87,10 +67,10 @@ impl Hostname {
                 .split('.')
                 .map(|label| {
                     // TODO: labels are restricted to 63 octets or less as per RFC 1035
-                    return Box::new(HostnameLabel {
+                    return Label::NORMAL(HostnameLabel {
                         length: label.len() as u8,
                         label: String::from(label),
-                    }) as Box<dyn Label>;
+                    });
                 })
                 .collect(),
         ));
@@ -104,7 +84,7 @@ impl Hostname {
     }
 
     pub(crate) fn parse(buffer: &[u8]) -> Result<ParsedHostname, String> {
-        let mut labels: Vec<Box<dyn Label>> = Vec::new();
+        let mut labels: Vec<Label> = Vec::new();
         let mut i: usize = 0;
 
         // TODO: add bounds check for a more friendly error than rust's panic
@@ -113,7 +93,7 @@ impl Hostname {
 
             if next_bytes & COMPRESSED_MASK == COMPRESSED_INDICATOR {
                 let pointer = next_bytes;
-                labels.push(Box::new(CompressedHostnameLabel { pointer }));
+                labels.push(Label::COMPRESSED(CompressedHostnameLabel { pointer }));
                 i += 2;
                 break; // as per RFC 1035, a NAME ends in either a pointer or a zero octet
             } else {
@@ -123,7 +103,7 @@ impl Hostname {
                 let label =
                     String::from_utf8(buffer[i..i + (label_size as usize)].to_vec()).unwrap();
 
-                labels.push(Box::new(HostnameLabel {
+                labels.push(Label::NORMAL(HostnameLabel {
                     length: label_size,
                     label,
                 }));
@@ -170,18 +150,18 @@ mod tests {
     #[test]
     fn test_hostname_from_hostname() {
         let expected = Hostname(vec![
-            Box::new(HostnameLabel {
+            Label::NORMAL(HostnameLabel {
                 length: 3,
                 label: "www".to_string(),
-            }) as Box<dyn Label>,
-            Box::new(HostnameLabel {
+            }),
+            Label::NORMAL(HostnameLabel {
                 length: 7,
                 label: "example".to_string(),
-            }) as Box<dyn Label>,
-            Box::new(HostnameLabel {
+            }),
+            Label::NORMAL(HostnameLabel {
                 length: 3,
                 label: "com".to_string(),
-            }) as Box<dyn Label>,
+            }),
         ]);
         assert_eq!(expected, Hostname::from_string("www.example.com").unwrap());
     }
@@ -189,18 +169,18 @@ mod tests {
     #[test]
     fn simple_hostname_to_bytes() {
         let hostname = Hostname(vec![
-            Box::new(HostnameLabel {
+            Label::NORMAL(HostnameLabel {
                 length: 3,
                 label: "www".to_string(),
-            }) as Box<dyn Label>,
-            Box::new(HostnameLabel {
+            }),
+            Label::NORMAL(HostnameLabel {
                 length: 7,
                 label: "example".to_string(),
-            }) as Box<dyn Label>,
-            Box::new(HostnameLabel {
+            }),
+            Label::NORMAL(HostnameLabel {
                 length: 3,
                 label: "com".to_string(),
-            }) as Box<dyn Label>,
+            }),
         ]);
 
         let mut expected: Vec<u8> = Vec::new();
@@ -232,18 +212,18 @@ mod tests {
         let hostname_length = bytes.len() - extra_bytes.len();
 
         let expected = Hostname(vec![
-            Box::new(HostnameLabel {
+            Label::NORMAL(HostnameLabel {
                 length: 3,
                 label: "www".to_string(),
-            }) as Box<dyn Label>,
-            Box::new(HostnameLabel {
+            }),
+            Label::NORMAL(HostnameLabel {
                 length: 7,
                 label: "example".to_string(),
-            }) as Box<dyn Label>,
-            Box::new(HostnameLabel {
+            }),
+            Label::NORMAL(HostnameLabel {
                 length: 3,
                 label: "com".to_string(),
-            }) as Box<dyn Label>,
+            }),
         ]);
 
         let result = Hostname::parse(bytes.as_slice()).unwrap();
@@ -263,9 +243,9 @@ mod tests {
 
         let hostname_length = bytes.len() - extra_bytes.len();
 
-        let expected = Hostname(vec![Box::new(CompressedHostnameLabel {
+        let expected = Hostname(vec![Label::COMPRESSED(CompressedHostnameLabel {
             pointer: compressed_pointer,
-        }) as Box<dyn Label>]);
+        })]);
 
         let result = Hostname::parse(bytes.as_slice()).unwrap();
 
@@ -291,13 +271,13 @@ mod tests {
         let hostname_length = bytes.len() - extra_bytes.len();
 
         let expected = Hostname(vec![
-            Box::new(HostnameLabel {
+            Label::NORMAL(HostnameLabel {
                 length: 7,
                 label: "service".to_string(),
-            }) as Box<dyn Label>,
-            Box::new(CompressedHostnameLabel {
+            }),
+            Label::COMPRESSED(CompressedHostnameLabel {
                 pointer: compressed_pointer,
-            }) as Box<dyn Label>,
+            }),
         ]);
 
         let result = Hostname::parse(bytes.as_slice()).unwrap();
