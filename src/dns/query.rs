@@ -6,15 +6,15 @@ use crate::dns::question::Question;
 use crate::dns::types::Type;
 use rand;
 
-struct Query {
-    hostnames: Vec<String>,
-    qtype: Type,
-    opcode: Opcode,
-    recursion_desired: bool,
+pub struct Query {
+    pub hostnames: Vec<String>,
+    pub qtype: Type,
+    pub opcode: Opcode,
+    pub recursion_desired: bool,
 }
 
 impl Query {
-    fn new(hostnames: Vec<String>) -> Query {
+    pub fn new(hostnames: Vec<String>) -> Query {
         return Query {
             hostnames,
             qtype: Type::A,
@@ -23,7 +23,7 @@ impl Query {
         };
     }
 
-    fn to_message(&self) -> Result<QuestionMessage, String> {
+    pub(crate) fn to_message(&self) -> Result<QuestionMessage, String> {
         if self.hostnames.len() > u16::max_value() as usize {
             return Err(format!(
                 "Too many hostnames entered, cannot query for more than {} hostnames",

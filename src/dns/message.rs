@@ -24,11 +24,11 @@ pub(crate) struct QuestionMessage {
 ///
 /// For this implementation I took the liberty of making the question and resource record sections mutually exclusive
 #[derive(PartialEq, Debug)]
-pub(crate) struct ResponseMessage {
-    pub(crate) header: Header,
-    pub(crate) answers: Vec<Answer>,
-    pub(crate) authorities: Vec<Authority>,
-    pub(crate) additionals: Vec<Additional>,
+pub struct ResponseMessage {
+    pub header: Header,
+    pub answers: Vec<Answer>,
+    pub authorities: Vec<Authority>,
+    pub additionals: Vec<Additional>,
 }
 
 impl Message for QuestionMessage {

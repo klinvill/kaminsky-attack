@@ -6,20 +6,20 @@ use num_traits::FromPrimitive;
 ///
 /// This struct does not layout the bits exactly as specified in RFC 1035. Instead it needs to be
 /// converted to a packed_header
-pub(crate) struct Header {
-    pub(crate) id: u16,
-    pub(crate) qr: bool,
-    pub(crate) opcode: Opcode,
-    pub(crate) aa: bool,
-    pub(crate) tc: bool,
-    pub(crate) rd: bool,
-    pub(crate) ra: bool,
-    pub(crate) z: u8,     // ideally u3
-    pub(crate) rcode: u8, // ideally u4
-    pub(crate) qdcount: u16,
-    pub(crate) ancount: u16,
-    pub(crate) nscount: u16,
-    pub(crate) arcount: u16,
+pub struct Header {
+    pub id: u16,
+    pub qr: bool,
+    pub opcode: Opcode,
+    pub aa: bool,
+    pub tc: bool,
+    pub rd: bool,
+    pub ra: bool,
+    pub z: u8,     // ideally u3
+    pub rcode: u8, // ideally u4
+    pub qdcount: u16,
+    pub ancount: u16,
+    pub nscount: u16,
+    pub arcount: u16,
 }
 
 #[derive(PartialEq, Debug)]
@@ -96,7 +96,7 @@ const BITMASKS: [u16; 8] = [0b0, 0b1, 0b11, 0b111, 0b1111, 0b11111, 0b111111, 0b
 #[repr(u8)]
 #[derive(FromPrimitive, PartialEq, Debug, Copy, Clone)]
 /// Opcode as specified in RFC 1035
-pub(crate) enum Opcode {
+pub enum Opcode {
     QUERY = 0,
     IQUERY = 1,
     STATUS = 2,

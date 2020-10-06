@@ -5,13 +5,13 @@ use num_traits::FromPrimitive;
 
 #[derive(PartialEq, Debug)]
 /// Resource record format as specified in IETF RFC 1035
-pub(crate) struct ResourceRecord {
-    pub(crate) name: Hostname,
-    pub(crate) rtype: Type,
-    pub(crate) class: Class,
-    pub(crate) ttl: u32,
-    pub(crate) rdlength: u16,
-    pub(crate) rdata: Vec<u8>,
+pub struct ResourceRecord {
+    pub name: Hostname,
+    pub rtype: Type,
+    pub class: Class,
+    pub ttl: u32,
+    pub rdlength: u16,
+    pub rdata: Vec<u8>,
 }
 
 #[derive(PartialEq, Debug)]

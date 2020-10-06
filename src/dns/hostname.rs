@@ -2,7 +2,7 @@
 /// Hostname format as specified in IETF RFC 1035
 ///
 /// This format is used for the *NAME fields
-pub(crate) struct Hostname(Vec<HostnameLabel>);
+pub struct Hostname(Vec<HostnameLabel>);
 
 #[derive(PartialEq, Debug)]
 struct HostnameLabel {
