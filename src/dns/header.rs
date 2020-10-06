@@ -129,13 +129,13 @@ impl Header {
             .pack()
             .data
             .iter()
-            .flat_map(|entry| return entry.to_le_bytes().to_vec())
+            .flat_map(|entry| return entry.to_be_bytes().to_vec())
             .collect();
     }
 
     fn from_bytes(buffer: &[u8]) -> Result<Header, String> {
         let packed_flags =
-            u16::from_le_bytes([buffer[FIELD_FLAGS.offset], buffer[FIELD_FLAGS.offset + 1]]);
+            u16::from_be_bytes([buffer[FIELD_FLAGS.offset], buffer[FIELD_FLAGS.offset + 1]]);
         let opcode_int = (packed_flags & BITMASKS[FLAG_OPCODE.width]) >> FLAG_OPCODE.offset;
         let opcode = match Opcode::from_u16(opcode_int) {
             None => return Err(format!("Unsupported opcode {}", opcode_int)),
@@ -143,20 +143,20 @@ impl Header {
         };
 
         return Ok(Header {
-            id: u16::from_le_bytes([buffer[FIELD_ID.offset], buffer[FIELD_ID.offset + 1]]),
-            qdcount: u16::from_le_bytes([
+            id: u16::from_be_bytes([buffer[FIELD_ID.offset], buffer[FIELD_ID.offset + 1]]),
+            qdcount: u16::from_be_bytes([
                 buffer[FIELD_QDCOUNT.offset],
                 buffer[FIELD_QDCOUNT.offset + 1],
             ]),
-            ancount: u16::from_le_bytes([
+            ancount: u16::from_be_bytes([
                 buffer[FIELD_ANCOUNT.offset],
                 buffer[FIELD_ANCOUNT.offset + 1],
             ]),
-            nscount: u16::from_le_bytes([
+            nscount: u16::from_be_bytes([
                 buffer[FIELD_NSCOUNT.offset],
                 buffer[FIELD_NSCOUNT.offset + 1],
             ]),
-            arcount: u16::from_le_bytes([
+            arcount: u16::from_be_bytes([
                 buffer[FIELD_ARCOUNT.offset],
                 buffer[FIELD_ARCOUNT.offset + 1],
             ]),
@@ -231,15 +231,15 @@ mod tests {
             arcount: 4,
         };
 
-        let expected: Vec<u8> = vec![0x42, 0xdb, 0b10000000, 0b00110000, 1, 0, 2, 0, 3, 0, 4, 0];
+        let expected: Vec<u8> = vec![0xdb, 0x42, 0b00110000, 0b10000000, 0, 1, 0, 2, 0, 3, 0, 4];
         assert_eq!(expected, header.to_bytes());
     }
 
     #[test]
     fn parse_simple_header() {
-        let extra_bytes = (0x12345678 as u32).to_le_bytes();
+        let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
-        let mut bytes: Vec<u8> = vec![0x42, 0xdb, 0b10000000, 0b00110000, 1, 0, 2, 0, 3, 0, 4, 0];
+        let mut bytes: Vec<u8> = vec![0xdb, 0x42, 0b00110000, 0b10000000, 0, 1, 0, 2, 0, 3, 0, 4];
         bytes.extend(&extra_bytes);
 
         let header_length: usize = 12;
@@ -267,11 +267,11 @@ mod tests {
 
     #[test]
     fn parse_rd_header() {
-        let extra_bytes = (0x12345678 as u32).to_le_bytes();
+        let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
         let mut bytes: Vec<u8> = vec![
             // Header
-            0x42, 0xdb, 0b10000001, 0b00000000, 0, 0, 1, 0, 0, 0, 0, 0,
+            0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 0, 0, 0,
         ];
         bytes.extend(&extra_bytes);
 
@@ -324,7 +324,7 @@ mod tests {
 
     #[test]
     fn from_and_to_bytes_produce_orginal_input() {
-        let bytes: [u8; 12] = [0x42, 0xdb, 0b10000000, 0b00110000, 1, 0, 2, 0, 3, 0, 4, 0];
+        let bytes: [u8; 12] = [0xdb, 0x42, 0b00110000, 0b10000000, 0, 1, 0, 2, 0, 3, 0, 4];
         assert_eq!(
             bytes,
             Header::from_bytes(&bytes).unwrap().to_bytes().as_slice()

@@ -167,7 +167,7 @@ mod tests {
 
             let mut expected: Vec<u8> = vec![
                 // Header
-                0x42, 0xdb, 0b10000000, 0b00000000, 1, 0, 0, 0, 0, 0, 0, 0,
+                0xdb, 0x42, 0b00000000, 0b10000000, 0, 1, 0, 0, 0, 0, 0, 0,
             ];
             // Question
             expected.push(3);
@@ -177,8 +177,8 @@ mod tests {
             expected.push(3);
             expected.extend("com".as_bytes());
             expected.push(0);
-            expected.extend(&(Type::A as u16).to_le_bytes());
-            expected.extend(&(Class::IN as u16).to_le_bytes());
+            expected.extend(&(Type::A as u16).to_be_bytes());
+            expected.extend(&(Class::IN as u16).to_be_bytes());
 
             assert_eq!(expected, message.to_bytes());
         }
@@ -218,7 +218,7 @@ mod tests {
 
             let mut expected: Vec<u8> = vec![
                 // Header
-                0x42, 0xdb, 0b10000000, 0b00000000, 2, 0, 0, 0, 0, 0, 0, 0,
+                0xdb, 0x42, 0b00000000, 0b10000000, 0, 2, 0, 0, 0, 0, 0, 0,
             ];
             // Question for www.example.com
             expected.push(3);
@@ -228,8 +228,8 @@ mod tests {
             expected.push(3);
             expected.extend("com".as_bytes());
             expected.push(0);
-            expected.extend(&(Type::A as u16).to_le_bytes());
-            expected.extend(&(Class::IN as u16).to_le_bytes());
+            expected.extend(&(Type::A as u16).to_be_bytes());
+            expected.extend(&(Class::IN as u16).to_be_bytes());
 
             // Question for www.google.com
             expected.push(3);
@@ -239,19 +239,19 @@ mod tests {
             expected.push(3);
             expected.extend("com".as_bytes());
             expected.push(0);
-            expected.extend(&(Type::A as u16).to_le_bytes());
-            expected.extend(&(Class::IN as u16).to_le_bytes());
+            expected.extend(&(Type::A as u16).to_be_bytes());
+            expected.extend(&(Class::IN as u16).to_be_bytes());
 
             assert_eq!(expected, message.to_bytes());
         }
 
         #[test]
         fn parse_simple_question() {
-            let extra_bytes = (0x12345678 as u32).to_le_bytes();
+            let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
             let mut bytes: Vec<u8> = vec![
                 // Header
-                0x42, 0xdb, 0b10000000, 0b00000000, 1, 0, 0, 0, 0, 0, 0, 0,
+                0xdb, 0x42, 0b00000000, 0b10000000, 0, 1, 0, 0, 0, 0, 0, 0,
             ];
             // Question
             bytes.push(3);
@@ -261,8 +261,8 @@ mod tests {
             bytes.push(3);
             bytes.extend("com".as_bytes());
             bytes.push(0);
-            bytes.extend(&(Type::A as u16).to_le_bytes());
-            bytes.extend(&(Class::IN as u16).to_le_bytes());
+            bytes.extend(&(Type::A as u16).to_be_bytes());
+            bytes.extend(&(Class::IN as u16).to_be_bytes());
             bytes.extend(&extra_bytes);
 
             let expected_header = Header {
@@ -300,11 +300,11 @@ mod tests {
 
         #[test]
         fn parse_multiple_questions() {
-            let extra_bytes = (0x12345678 as u32).to_le_bytes();
+            let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
             let mut bytes: Vec<u8> = vec![
                 // Header
-                0x42, 0xdb, 0b10000000, 0b00000000, 2, 0, 0, 0, 0, 0, 0, 0,
+                0xdb, 0x42, 0b00000000, 0b10000000, 0, 2, 0, 0, 0, 0, 0, 0,
             ];
             // Question for www.example.com
             bytes.push(3);
@@ -314,8 +314,8 @@ mod tests {
             bytes.push(3);
             bytes.extend("com".as_bytes());
             bytes.push(0);
-            bytes.extend(&(Type::A as u16).to_le_bytes());
-            bytes.extend(&(Class::IN as u16).to_le_bytes());
+            bytes.extend(&(Type::A as u16).to_be_bytes());
+            bytes.extend(&(Class::IN as u16).to_be_bytes());
 
             // Question for www.google.com
             bytes.push(3);
@@ -325,8 +325,8 @@ mod tests {
             bytes.push(3);
             bytes.extend("com".as_bytes());
             bytes.push(0);
-            bytes.extend(&(Type::A as u16).to_le_bytes());
-            bytes.extend(&(Class::IN as u16).to_le_bytes());
+            bytes.extend(&(Type::A as u16).to_be_bytes());
+            bytes.extend(&(Class::IN as u16).to_be_bytes());
             bytes.extend(&extra_bytes);
 
             let expected_header = Header {
@@ -402,7 +402,7 @@ mod tests {
                 class: Class::IN,
                 ttl: 0x258,
                 rdlength: 4,
-                rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+                rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
             };
 
             let message = ResponseMessage {
@@ -412,7 +412,7 @@ mod tests {
 
             let mut expected: Vec<u8> = vec![
                 // Header
-                0x42, 0xdb, 0b10000001, 0b00000000, 0, 0, 1, 0, 0, 0, 0, 0,
+                0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 0, 0, 0,
             ];
             // Answer
             expected.push(3);
@@ -422,11 +422,11 @@ mod tests {
             expected.push(3);
             expected.extend("com".as_bytes());
             expected.push(0);
-            expected.extend(&(Type::A as u16).to_le_bytes());
-            expected.extend(&(Class::IN as u16).to_le_bytes());
-            expected.extend(&(0x258 as u32).to_le_bytes());
-            expected.extend(&(4 as u16).to_le_bytes());
-            expected.extend(&(0x9b211144 as u32).to_le_bytes());
+            expected.extend(&(Type::A as u16).to_be_bytes());
+            expected.extend(&(Class::IN as u16).to_be_bytes());
+            expected.extend(&(0x258 as u32).to_be_bytes());
+            expected.extend(&(4 as u16).to_be_bytes());
+            expected.extend(&(0x9b211144 as u32).to_be_bytes());
 
             assert_eq!(expected, message.to_bytes());
         }
@@ -455,7 +455,7 @@ mod tests {
                 class: Class::IN,
                 ttl: 0x258,
                 rdlength: 4,
-                rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+                rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
             };
 
             let authority = Authority {
@@ -464,7 +464,7 @@ mod tests {
                 class: Class::IN,
                 ttl: 0x258,
                 rdlength: 4,
-                rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+                rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
             };
 
             let additional = Additional {
@@ -473,7 +473,7 @@ mod tests {
                 class: Class::IN,
                 ttl: 0x258,
                 rdlength: 4,
-                rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+                rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
             };
 
             let message = ResponseMessage {
@@ -485,7 +485,7 @@ mod tests {
 
             let mut expected: Vec<u8> = vec![
                 // Header
-                0x42, 0xdb, 0b10000001, 0b00000000, 0, 0, 1, 0, 1, 0, 1, 0,
+                0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 1, 0, 1,
             ];
             // Answer
             expected.push(3);
@@ -495,11 +495,11 @@ mod tests {
             expected.push(3);
             expected.extend("com".as_bytes());
             expected.push(0);
-            expected.extend(&(Type::A as u16).to_le_bytes());
-            expected.extend(&(Class::IN as u16).to_le_bytes());
-            expected.extend(&(0x258 as u32).to_le_bytes());
-            expected.extend(&(4 as u16).to_le_bytes());
-            expected.extend(&(0x9b211144 as u32).to_le_bytes());
+            expected.extend(&(Type::A as u16).to_be_bytes());
+            expected.extend(&(Class::IN as u16).to_be_bytes());
+            expected.extend(&(0x258 as u32).to_be_bytes());
+            expected.extend(&(4 as u16).to_be_bytes());
+            expected.extend(&(0x9b211144 as u32).to_be_bytes());
 
             // Authority
             expected.push(7);
@@ -507,11 +507,11 @@ mod tests {
             expected.push(3);
             expected.extend("com".as_bytes());
             expected.push(0);
-            expected.extend(&(Type::NS as u16).to_le_bytes());
-            expected.extend(&(Class::IN as u16).to_le_bytes());
-            expected.extend(&(0x258 as u32).to_le_bytes());
-            expected.extend(&(4 as u16).to_le_bytes());
-            expected.extend(&(0x9b211144 as u32).to_le_bytes());
+            expected.extend(&(Type::NS as u16).to_be_bytes());
+            expected.extend(&(Class::IN as u16).to_be_bytes());
+            expected.extend(&(0x258 as u32).to_be_bytes());
+            expected.extend(&(4 as u16).to_be_bytes());
+            expected.extend(&(0x9b211144 as u32).to_be_bytes());
 
             // Additional
             expected.push(3);
@@ -521,22 +521,22 @@ mod tests {
             expected.push(3);
             expected.extend("com".as_bytes());
             expected.push(0);
-            expected.extend(&(Type::A as u16).to_le_bytes());
-            expected.extend(&(Class::IN as u16).to_le_bytes());
-            expected.extend(&(0x258 as u32).to_le_bytes());
-            expected.extend(&(4 as u16).to_le_bytes());
-            expected.extend(&(0x9b211144 as u32).to_le_bytes());
+            expected.extend(&(Type::A as u16).to_be_bytes());
+            expected.extend(&(Class::IN as u16).to_be_bytes());
+            expected.extend(&(0x258 as u32).to_be_bytes());
+            expected.extend(&(4 as u16).to_be_bytes());
+            expected.extend(&(0x9b211144 as u32).to_be_bytes());
 
             assert_eq!(expected, message.to_bytes());
         }
 
         #[test]
         fn parse_simple_response() {
-            let extra_bytes = (0x12345678 as u32).to_le_bytes();
+            let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
             let mut bytes: Vec<u8> = vec![
                 // Header
-                0x42, 0xdb, 0b10000001, 0b00000000, 0, 0, 1, 0, 0, 0, 0, 0,
+                0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 0, 0, 0,
             ];
             // Answer
             bytes.push(3);
@@ -546,11 +546,11 @@ mod tests {
             bytes.push(3);
             bytes.extend("com".as_bytes());
             bytes.push(0);
-            bytes.extend(&(Type::A as u16).to_le_bytes());
-            bytes.extend(&(Class::IN as u16).to_le_bytes());
-            bytes.extend(&(0x258 as u32).to_le_bytes());
-            bytes.extend(&(4 as u16).to_le_bytes());
-            bytes.extend(&(0x9b211144 as u32).to_le_bytes());
+            bytes.extend(&(Type::A as u16).to_be_bytes());
+            bytes.extend(&(Class::IN as u16).to_be_bytes());
+            bytes.extend(&(0x258 as u32).to_be_bytes());
+            bytes.extend(&(4 as u16).to_be_bytes());
+            bytes.extend(&(0x9b211144 as u32).to_be_bytes());
             bytes.extend(&extra_bytes);
 
             let expected_header = Header {
@@ -575,7 +575,7 @@ mod tests {
                 class: Class::IN,
                 ttl: 0x258,
                 rdlength: 4,
-                rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+                rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
             };
 
             let expected_message = ResponseMessage {
@@ -591,11 +591,11 @@ mod tests {
 
         #[test]
         fn parse_multiple_responses() {
-            let extra_bytes = (0x12345678 as u32).to_le_bytes();
+            let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
             let mut bytes: Vec<u8> = vec![
                 // Header
-                0x42, 0xdb, 0b10000001, 0b00000000, 0, 0, 1, 0, 1, 0, 1, 0,
+                0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 1, 0, 1,
             ];
             // Answer
             bytes.push(3);
@@ -605,11 +605,11 @@ mod tests {
             bytes.push(3);
             bytes.extend("com".as_bytes());
             bytes.push(0);
-            bytes.extend(&(Type::A as u16).to_le_bytes());
-            bytes.extend(&(Class::IN as u16).to_le_bytes());
-            bytes.extend(&(0x258 as u32).to_le_bytes());
-            bytes.extend(&(4 as u16).to_le_bytes());
-            bytes.extend(&(0x9b211144 as u32).to_le_bytes());
+            bytes.extend(&(Type::A as u16).to_be_bytes());
+            bytes.extend(&(Class::IN as u16).to_be_bytes());
+            bytes.extend(&(0x258 as u32).to_be_bytes());
+            bytes.extend(&(4 as u16).to_be_bytes());
+            bytes.extend(&(0x9b211144 as u32).to_be_bytes());
 
             // Authority
             bytes.push(7);
@@ -617,11 +617,11 @@ mod tests {
             bytes.push(3);
             bytes.extend("com".as_bytes());
             bytes.push(0);
-            bytes.extend(&(Type::NS as u16).to_le_bytes());
-            bytes.extend(&(Class::IN as u16).to_le_bytes());
-            bytes.extend(&(0x258 as u32).to_le_bytes());
-            bytes.extend(&(4 as u16).to_le_bytes());
-            bytes.extend(&(0x9b211144 as u32).to_le_bytes());
+            bytes.extend(&(Type::NS as u16).to_be_bytes());
+            bytes.extend(&(Class::IN as u16).to_be_bytes());
+            bytes.extend(&(0x258 as u32).to_be_bytes());
+            bytes.extend(&(4 as u16).to_be_bytes());
+            bytes.extend(&(0x9b211144 as u32).to_be_bytes());
 
             // Additional
             bytes.push(3);
@@ -631,11 +631,11 @@ mod tests {
             bytes.push(3);
             bytes.extend("com".as_bytes());
             bytes.push(0);
-            bytes.extend(&(Type::A as u16).to_le_bytes());
-            bytes.extend(&(Class::IN as u16).to_le_bytes());
-            bytes.extend(&(0x258 as u32).to_le_bytes());
-            bytes.extend(&(4 as u16).to_le_bytes());
-            bytes.extend(&(0x9b211144 as u32).to_le_bytes());
+            bytes.extend(&(Type::A as u16).to_be_bytes());
+            bytes.extend(&(Class::IN as u16).to_be_bytes());
+            bytes.extend(&(0x258 as u32).to_be_bytes());
+            bytes.extend(&(4 as u16).to_be_bytes());
+            bytes.extend(&(0x9b211144 as u32).to_be_bytes());
 
             bytes.extend(&extra_bytes);
 
@@ -661,7 +661,7 @@ mod tests {
                 class: Class::IN,
                 ttl: 0x258,
                 rdlength: 4,
-                rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+                rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
             };
 
             let expected_authority = Authority {
@@ -670,7 +670,7 @@ mod tests {
                 class: Class::IN,
                 ttl: 0x258,
                 rdlength: 4,
-                rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+                rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
             };
 
             let expected_additional = Additional {
@@ -679,7 +679,7 @@ mod tests {
                 class: Class::IN,
                 ttl: 0x258,
                 rdlength: 4,
-                rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+                rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
             };
 
             let expected_message = ResponseMessage {

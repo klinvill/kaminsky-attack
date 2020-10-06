@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn parse_simple_hostname() {
-        let extra_bytes = (0x12345678 as u32).to_le_bytes();
+        let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
         let mut bytes: Vec<u8> = Vec::new();
         bytes.push(3);

@@ -26,8 +26,8 @@ impl Question {
     fn pack(&self) -> PackedQuestion {
         let mut packed = Vec::new();
         packed.extend(self.qname.to_bytes());
-        packed.extend(&(self.qtype as u16).to_le_bytes());
-        packed.extend(&(self.qclass as u16).to_le_bytes());
+        packed.extend(&(self.qtype as u16).to_be_bytes());
+        packed.extend(&(self.qclass as u16).to_be_bytes());
         return PackedQuestion { data: packed };
     }
 
@@ -41,14 +41,14 @@ impl Question {
         let parsed_hostname = Hostname::parse(buffer)?;
         parsed_bytes += parsed_hostname.parsed_bytes as usize;
 
-        let qtype_int = u16::from_le_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
+        let qtype_int = u16::from_be_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
         let qtype = match Type::from_u16(qtype_int) {
             None => return Err(format!("Unsupported QTYPE {}", qtype_int)),
             Some(op) => op,
         };
         parsed_bytes += 2;
 
-        let qclass_int = u16::from_le_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
+        let qclass_int = u16::from_be_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
         let qclass = match Class::from_u16(qclass_int) {
             None => return Err(format!("Unsupported QCLASS {}", qclass_int)),
             Some(op) => op,
@@ -92,8 +92,8 @@ mod tests {
         expected_data.push(3);
         expected_data.extend("com".as_bytes());
         expected_data.push(0);
-        expected_data.extend(&(Type::A as u16).to_le_bytes());
-        expected_data.extend(&(Class::IN as u16).to_le_bytes());
+        expected_data.extend(&(Type::A as u16).to_be_bytes());
+        expected_data.extend(&(Class::IN as u16).to_be_bytes());
         let expected = PackedQuestion {
             data: expected_data,
         };
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn parse_question() {
-        let extra_bytes = (0x12345678 as u32).to_le_bytes();
+        let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
         let mut bytes: Vec<u8> = Vec::new();
         bytes.push(3);
@@ -112,8 +112,8 @@ mod tests {
         bytes.push(3);
         bytes.extend("com".as_bytes());
         bytes.push(0);
-        bytes.extend(&(Type::A as u16).to_le_bytes());
-        bytes.extend(&(Class::IN as u16).to_le_bytes());
+        bytes.extend(&(Type::A as u16).to_be_bytes());
+        bytes.extend(&(Class::IN as u16).to_be_bytes());
         bytes.extend(&extra_bytes);
 
         let question_length = bytes.len() - extra_bytes.len();

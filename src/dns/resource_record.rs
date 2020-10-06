@@ -29,10 +29,10 @@ impl ResourceRecord {
     fn pack(&self) -> PackedResourceRecord {
         let mut packed = Vec::new();
         packed.extend(self.name.to_bytes());
-        packed.extend(&(self.rtype as u16).to_le_bytes());
-        packed.extend(&(self.class as u16).to_le_bytes());
-        packed.extend(&self.ttl.to_le_bytes());
-        packed.extend(&self.rdlength.to_le_bytes());
+        packed.extend(&(self.rtype as u16).to_be_bytes());
+        packed.extend(&(self.class as u16).to_be_bytes());
+        packed.extend(&self.ttl.to_be_bytes());
+        packed.extend(&self.rdlength.to_be_bytes());
         packed.extend(&self.rdata);
         return PackedResourceRecord { data: packed };
     }
@@ -47,21 +47,21 @@ impl ResourceRecord {
         let parsed_hostname = Hostname::parse(buffer)?;
         parsed_bytes += parsed_hostname.parsed_bytes as usize;
 
-        let rtype_int = u16::from_le_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
+        let rtype_int = u16::from_be_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
         let rtype = match Type::from_u16(rtype_int) {
             None => return Err(format!("Unsupported QTYPE {}", rtype_int)),
             Some(op) => op,
         };
         parsed_bytes += 2;
 
-        let class_int = u16::from_le_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
+        let class_int = u16::from_be_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
         let class = match Class::from_u16(class_int) {
             None => return Err(format!("Unsupported QCLASS {}", class_int)),
             Some(op) => op,
         };
         parsed_bytes += 2;
 
-        let ttl = u32::from_le_bytes([
+        let ttl = u32::from_be_bytes([
             buffer[parsed_bytes],
             buffer[parsed_bytes + 1],
             buffer[parsed_bytes + 2],
@@ -69,7 +69,7 @@ impl ResourceRecord {
         ]);
         parsed_bytes += 4;
 
-        let rdlength = u16::from_le_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
+        let rdlength = u16::from_be_bytes([buffer[parsed_bytes], buffer[parsed_bytes + 1]]);
         parsed_bytes += 2;
 
         let rdata: Vec<u8> = buffer[parsed_bytes..parsed_bytes + rdlength as usize].to_vec();
@@ -108,7 +108,7 @@ mod tests {
             class: Class::IN,
             ttl: 0x258,
             rdlength: 4,
-            rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+            rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
         };
 
         let mut expected_data = Vec::new();
@@ -119,11 +119,11 @@ mod tests {
         expected_data.push(3);
         expected_data.extend("com".as_bytes());
         expected_data.push(0);
-        expected_data.extend(&(Type::A as u16).to_le_bytes());
-        expected_data.extend(&(Class::IN as u16).to_le_bytes());
-        expected_data.extend(&(0x258 as u32).to_le_bytes());
-        expected_data.extend(&(4 as u16).to_le_bytes());
-        expected_data.extend(&(0x9b211144 as u32).to_le_bytes());
+        expected_data.extend(&(Type::A as u16).to_be_bytes());
+        expected_data.extend(&(Class::IN as u16).to_be_bytes());
+        expected_data.extend(&(0x258 as u32).to_be_bytes());
+        expected_data.extend(&(4 as u16).to_be_bytes());
+        expected_data.extend(&(0x9b211144 as u32).to_be_bytes());
         let expected = PackedResourceRecord {
             data: expected_data,
         };
@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn parse_resource_record() {
-        let extra_bytes = (0x12345678 as u32).to_le_bytes();
+        let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
         let mut bytes: Vec<u8> = Vec::new();
         bytes.push(3);
@@ -142,11 +142,11 @@ mod tests {
         bytes.push(3);
         bytes.extend("com".as_bytes());
         bytes.push(0);
-        bytes.extend(&(Type::A as u16).to_le_bytes());
-        bytes.extend(&(Class::IN as u16).to_le_bytes());
-        bytes.extend(&(0x258 as u32).to_le_bytes());
-        bytes.extend(&(4 as u16).to_le_bytes());
-        bytes.extend(&(0x9b211144 as u32).to_le_bytes());
+        bytes.extend(&(Type::A as u16).to_be_bytes());
+        bytes.extend(&(Class::IN as u16).to_be_bytes());
+        bytes.extend(&(0x258 as u32).to_be_bytes());
+        bytes.extend(&(4 as u16).to_be_bytes());
+        bytes.extend(&(0x9b211144 as u32).to_be_bytes());
         bytes.extend(&extra_bytes);
 
         let record_length = bytes.len() - extra_bytes.len();
@@ -157,7 +157,7 @@ mod tests {
             class: Class::IN,
             ttl: 0x258,
             rdlength: 4,
-            rdata: (0x9b211144 as u32).to_le_bytes().to_vec(),
+            rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
         };
 
         let result = ResourceRecord::parse(bytes.as_slice()).unwrap();
