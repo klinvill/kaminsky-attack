@@ -1,13 +1,39 @@
+use std::fmt;
+use std::fmt::Debug;
+
 #[derive(PartialEq, Debug)]
 /// Hostname format as specified in IETF RFC 1035
 ///
 /// This format is used for the *NAME fields
-pub struct Hostname(Vec<HostnameLabel>);
+pub struct Hostname(Vec<Box<dyn Label>>);
+
+trait Label {
+    fn to_bytes(&self) -> Vec<u8>;
+    fn repr(&self) -> String;
+    fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+}
+
+impl PartialEq for dyn Label {
+    fn eq(&self, other: &Self) -> bool {
+        return self.repr() == other.repr();
+    }
+}
+
+impl fmt::Debug for dyn Label {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        return self.format(f);
+    }
+}
 
 #[derive(PartialEq, Debug)]
 struct HostnameLabel {
     length: u8,
     label: String,
+}
+
+#[derive(PartialEq, Debug)]
+struct CompressedHostnameLabel {
+    pointer: u16,
 }
 
 pub(crate) struct ParsedHostname {
@@ -16,12 +42,37 @@ pub(crate) struct ParsedHostname {
     pub(crate) hostname: Hostname,
 }
 
-impl HostnameLabel {
+impl Label for HostnameLabel {
     fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.push(self.length);
         bytes.extend(self.label.bytes());
         return bytes;
+    }
+
+    fn repr(&self) -> String {
+        return format!("{}_{}", self.length, self.label);
+    }
+
+    fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        return self.fmt(f);
+    }
+}
+
+// a compressed record is indicated by the first two bits being set
+const COMPRESSED_MASK: u16 = 0xc000;
+const COMPRESSED_INDICATOR: u16 = 0xc000;
+
+impl Label for CompressedHostnameLabel {
+    fn to_bytes(&self) -> Vec<u8> {
+        let packed_value = COMPRESSED_INDICATOR ^ self.pointer;
+        return packed_value.to_be_bytes().to_vec();
+    }
+    fn repr(&self) -> String {
+        return format!("{}", self.pointer);
+    }
+    fn format(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        return self.fmt(f);
     }
 }
 
@@ -30,15 +81,16 @@ impl Hostname {
         if !valid_hostname(hostname) {
             return Err("Invalid hostname".to_string());
         }
+
         return Ok(Hostname(
             hostname
                 .split('.')
                 .map(|label| {
                     // TODO: labels are restricted to 63 octets or less as per RFC 1035
-                    return HostnameLabel {
+                    return Box::new(HostnameLabel {
                         length: label.len() as u8,
                         label: String::from(label),
-                    };
+                    }) as Box<dyn Label>;
                 })
                 .collect(),
         ));
@@ -52,24 +104,41 @@ impl Hostname {
     }
 
     pub(crate) fn parse(buffer: &[u8]) -> Result<ParsedHostname, String> {
-        let mut labels: Vec<HostnameLabel> = Vec::new();
+        let mut labels: Vec<Box<dyn Label>> = Vec::new();
         let mut i: usize = 0;
 
         // TODO: add bounds check for a more friendly error than rust's panic
-        while buffer[i] != 0 {
-            let label_size = buffer[i];
-            i += 1;
-            // TODO: should use errors instead of relying on panic here
-            let label = String::from_utf8(buffer[i..i + (label_size as usize)].to_vec()).unwrap();
-            labels.push(HostnameLabel {
-                length: label_size,
-                label,
-            });
-            i += label_size as usize;
+        loop {
+            let next_bytes = u16::from_be_bytes([buffer[i], buffer[i + 1]]);
+
+            if next_bytes & COMPRESSED_MASK == COMPRESSED_INDICATOR {
+                let pointer = next_bytes;
+                labels.push(Box::new(CompressedHostnameLabel { pointer }));
+                i += 2;
+                break; // as per RFC 1035, a NAME ends in either a pointer or a zero octet
+            } else {
+                let label_size = buffer[i];
+                i += 1;
+                // TODO: should use errors instead of relying on panic here
+                let label =
+                    String::from_utf8(buffer[i..i + (label_size as usize)].to_vec()).unwrap();
+
+                labels.push(Box::new(HostnameLabel {
+                    length: label_size,
+                    label,
+                }));
+                i += label_size as usize;
+
+                if buffer[i] == 0 {
+                    i += 1;
+                    break; // as per RFC 1035, a NAME ends in either a pointer or a zero octet
+                }
+            }
         }
 
-        let parsed_bytes: u8 = (i + 1) as u8;
-        if parsed_bytes as usize != i + 1 {
+        let parsed_bytes: u8 = (i) as u8;
+        if parsed_bytes as usize != i {
+            // Note: this can still fail silently if the number of bytes parsed also calls usize to overflow
             return Err("Parsed more bytes than can be represented in a u8".to_string());
         }
 
@@ -96,23 +165,23 @@ fn valid_hostname(hostname: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::dns::hostname::{Hostname, HostnameLabel};
+    use crate::dns::hostname::{CompressedHostnameLabel, Hostname, HostnameLabel, Label};
 
     #[test]
     fn test_hostname_from_hostname() {
         let expected = Hostname(vec![
-            HostnameLabel {
+            Box::new(HostnameLabel {
                 length: 3,
                 label: "www".to_string(),
-            },
-            HostnameLabel {
+            }) as Box<dyn Label>,
+            Box::new(HostnameLabel {
                 length: 7,
                 label: "example".to_string(),
-            },
-            HostnameLabel {
+            }) as Box<dyn Label>,
+            Box::new(HostnameLabel {
                 length: 3,
                 label: "com".to_string(),
-            },
+            }) as Box<dyn Label>,
         ]);
         assert_eq!(expected, Hostname::from_string("www.example.com").unwrap());
     }
@@ -120,18 +189,18 @@ mod tests {
     #[test]
     fn simple_hostname_to_bytes() {
         let hostname = Hostname(vec![
-            HostnameLabel {
+            Box::new(HostnameLabel {
                 length: 3,
                 label: "www".to_string(),
-            },
-            HostnameLabel {
+            }) as Box<dyn Label>,
+            Box::new(HostnameLabel {
                 length: 7,
                 label: "example".to_string(),
-            },
-            HostnameLabel {
+            }) as Box<dyn Label>,
+            Box::new(HostnameLabel {
                 length: 3,
                 label: "com".to_string(),
-            },
+            }) as Box<dyn Label>,
         ]);
 
         let mut expected: Vec<u8> = Vec::new();
@@ -163,18 +232,72 @@ mod tests {
         let hostname_length = bytes.len() - extra_bytes.len();
 
         let expected = Hostname(vec![
-            HostnameLabel {
+            Box::new(HostnameLabel {
                 length: 3,
                 label: "www".to_string(),
-            },
-            HostnameLabel {
+            }) as Box<dyn Label>,
+            Box::new(HostnameLabel {
                 length: 7,
                 label: "example".to_string(),
-            },
-            HostnameLabel {
+            }) as Box<dyn Label>,
+            Box::new(HostnameLabel {
                 length: 3,
                 label: "com".to_string(),
-            },
+            }) as Box<dyn Label>,
+        ]);
+
+        let result = Hostname::parse(bytes.as_slice()).unwrap();
+
+        assert_eq!(expected, result.hostname);
+        assert_eq!(hostname_length, result.parsed_bytes as usize);
+    }
+
+    #[test]
+    fn parse_compressed_hostname() {
+        let extra_bytes = (0x00123456 as u32).to_be_bytes();
+
+        let compressed_pointer: u16 = 0xc00c;
+
+        let mut bytes: Vec<u8> = compressed_pointer.to_be_bytes().to_vec();
+        bytes.extend(&extra_bytes);
+
+        let hostname_length = bytes.len() - extra_bytes.len();
+
+        let expected = Hostname(vec![Box::new(CompressedHostnameLabel {
+            pointer: compressed_pointer,
+        }) as Box<dyn Label>]);
+
+        let result = Hostname::parse(bytes.as_slice()).unwrap();
+
+        assert_eq!(expected, result.hostname);
+        assert_eq!(hostname_length, result.parsed_bytes as usize);
+    }
+
+    #[test]
+    fn parse_partially_compressed_hostname() {
+        let extra_bytes = (0x12345678 as u32).to_be_bytes();
+
+        let compressed_pointer: u16 = 0xc00c;
+
+        // This mimics an example query where perhaps a query that contains a request to
+        // www.example.com can shorten another entry that contains service.example.com by using a
+        // pointer to example.com
+        let mut bytes: Vec<u8> = Vec::new();
+        bytes.push(7);
+        bytes.extend("service".as_bytes());
+        bytes.extend(&compressed_pointer.to_be_bytes());
+        bytes.extend(&extra_bytes);
+
+        let hostname_length = bytes.len() - extra_bytes.len();
+
+        let expected = Hostname(vec![
+            Box::new(HostnameLabel {
+                length: 7,
+                label: "service".to_string(),
+            }) as Box<dyn Label>,
+            Box::new(CompressedHostnameLabel {
+                pointer: compressed_pointer,
+            }) as Box<dyn Label>,
         ]);
 
         let result = Hostname::parse(bytes.as_slice()).unwrap();
