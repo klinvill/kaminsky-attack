@@ -3,7 +3,7 @@ use crate::dns::hostname::Hostname;
 use crate::dns::types::Type;
 use num_traits::FromPrimitive;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 /// Resource record format as specified in IETF RFC 1035
 pub struct ResourceRecord {
     pub name: Hostname,

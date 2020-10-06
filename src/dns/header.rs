@@ -1,7 +1,7 @@
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 /// DNS Header with fields as specified in IETF RFC 1035
 ///
 /// This struct does not layout the bits exactly as specified in RFC 1035. Instead it needs to be

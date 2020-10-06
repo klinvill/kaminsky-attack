@@ -4,7 +4,7 @@ use crate::dns::authority::Authority;
 use crate::dns::header::Header;
 use crate::dns::question::Question;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 /// DNS message format as specified in IETF RFC 1035
 pub struct Message {
     pub header: Header,

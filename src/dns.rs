@@ -9,6 +9,7 @@ mod message;
 mod query;
 mod question;
 mod resource_record;
+mod response;
 mod types;
 
 pub type Client = client::Client;

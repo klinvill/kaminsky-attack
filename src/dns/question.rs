@@ -3,7 +3,7 @@ use crate::dns::hostname::Hostname;
 use crate::dns::types::Type;
 use num_traits::FromPrimitive;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 /// DNS question section with fields as specified in IETF RFC 1035
 pub struct Question {
     pub qname: Hostname,
