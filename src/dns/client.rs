@@ -1,4 +1,4 @@
-use crate::dns::message::{Message, ResponseMessage};
+use crate::dns::message::Message;
 use crate::dns::query::Query;
 use std::net::UdpSocket;
 
@@ -23,7 +23,7 @@ impl Client {
     }
 
     // TODO: make sure to use an error type that encompasses the IO errors
-    pub fn query(&self, request: Query) -> Result<ResponseMessage, String> {
+    pub fn query(&self, request: Query) -> Result<Message, String> {
         let mut buffer = [0; DNS_MAX_UDP_SIZE];
         let local_address = format!("{}:{}", self.local_host, self.local_port);
         let socket = match UdpSocket::bind(local_address) {
@@ -54,6 +54,7 @@ impl Client {
             Err(e) => return Err(e.to_string()),
             Ok(sz) => sz,
         };
-        return ResponseMessage::parse(&buffer[..size]);
+
+        return Message::parse(&buffer[..size]);
     }
 }

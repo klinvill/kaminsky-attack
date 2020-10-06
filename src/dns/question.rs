@@ -5,10 +5,10 @@ use num_traits::FromPrimitive;
 
 #[derive(PartialEq, Debug)]
 /// DNS question section with fields as specified in IETF RFC 1035
-pub(crate) struct Question {
-    pub(crate) qname: Hostname,
-    pub(crate) qtype: Type,
-    pub(crate) qclass: Class,
+pub struct Question {
+    pub qname: Hostname,
+    pub qtype: Type,
+    pub qclass: Class,
 }
 
 #[derive(PartialEq, Debug)]
