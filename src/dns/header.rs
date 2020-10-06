@@ -59,35 +59,35 @@ struct Flag {
 
 // Flags in header
 const FLAG_QR: Flag = Flag {
-    offset: 0,
+    offset: 15,
     width: 1,
 };
 const FLAG_OPCODE: Flag = Flag {
-    offset: 1,
+    offset: 11,
     width: 4,
 };
 const FLAG_AA: Flag = Flag {
-    offset: 5,
+    offset: 10,
     width: 1,
 };
 const FLAG_TC: Flag = Flag {
-    offset: 6,
+    offset: 9,
     width: 1,
 };
 const FLAG_RD: Flag = Flag {
-    offset: 7,
-    width: 1,
-};
-const FLAG_RA: Flag = Flag {
     offset: 8,
     width: 1,
 };
+const FLAG_RA: Flag = Flag {
+    offset: 7,
+    width: 1,
+};
 const FLAG_Z: Flag = Flag {
-    offset: 9,
+    offset: 4,
     width: 3,
 };
 const FLAG_RCODE: Flag = Flag {
-    offset: 12,
+    offset: 0,
     width: 4,
 };
 
@@ -104,7 +104,8 @@ pub enum Opcode {
 
 impl Header {
     fn pack(&self) -> PackedHeader {
-        let second_u16: u16 = 0 ^ self.qr as u16
+        let second_u16: u16 = 0
+            ^ ((self.qr as u16) << FLAG_QR.offset)
             ^ ((self.opcode as u16 & BITMASKS[FLAG_OPCODE.width]) << FLAG_OPCODE.offset)
             ^ ((self.aa as u16) << FLAG_AA.offset)
             ^ ((self.tc as u16) << FLAG_TC.offset)
@@ -136,7 +137,7 @@ impl Header {
     fn from_bytes(buffer: &[u8]) -> Result<Header, String> {
         let packed_flags =
             u16::from_be_bytes([buffer[FIELD_FLAGS.offset], buffer[FIELD_FLAGS.offset + 1]]);
-        let opcode_int = (packed_flags & BITMASKS[FLAG_OPCODE.width]) >> FLAG_OPCODE.offset;
+        let opcode_int = (packed_flags >> FLAG_OPCODE.offset) & BITMASKS[FLAG_OPCODE.width];
         let opcode = match Opcode::from_u16(opcode_int) {
             None => return Err(format!("Unsupported opcode {}", opcode_int)),
             Some(op) => op,
@@ -161,7 +162,7 @@ impl Header {
                 buffer[FIELD_ARCOUNT.offset + 1],
             ]),
             // Flags
-            qr: packed_flags & BITMASKS[FLAG_QR.width] >> FLAG_QR.offset != 0,
+            qr: (packed_flags >> FLAG_QR.offset) & BITMASKS[FLAG_QR.width] != 0,
             opcode,
             aa: (packed_flags >> FLAG_AA.offset) & BITMASKS[FLAG_AA.width] != 0,
             tc: (packed_flags >> FLAG_TC.offset) & BITMASKS[FLAG_TC.width] != 0,
@@ -208,7 +209,7 @@ mod tests {
         };
 
         let expected = PackedHeader {
-            data: [0xdb42, 0b0011000010000000, 1, 2, 3, 4],
+            data: [0xdb42, 0b0000000100000011, 1, 2, 3, 4],
         };
         assert_eq!(expected, header.pack());
     }
@@ -231,7 +232,51 @@ mod tests {
             arcount: 4,
         };
 
-        let expected: Vec<u8> = vec![0xdb, 0x42, 0b00110000, 0b10000000, 0, 1, 0, 2, 0, 3, 0, 4];
+        let expected: Vec<u8> = vec![0xdb, 0x42, 0b00000001, 0b00000011, 0, 1, 0, 2, 0, 3, 0, 4];
+        assert_eq!(expected, header.to_bytes());
+    }
+
+    #[test]
+    fn rd_header_to_bytes() {
+        let header = Header {
+            id: 0xdb42,
+            qr: false,
+            opcode: Opcode::QUERY,
+            aa: false,
+            tc: false,
+            rd: true,
+            ra: false,
+            z: 7, // z should be ignored since RFC 1035 specifies it set to 0
+            rcode: 0,
+            qdcount: 1,
+            ancount: 2,
+            nscount: 3,
+            arcount: 4,
+        };
+
+        let expected: Vec<u8> = vec![0xdb, 0x42, 0b00000001, 0b0000000, 0, 1, 0, 2, 0, 3, 0, 4];
+        assert_eq!(expected, header.to_bytes());
+    }
+
+    #[test]
+    fn qr_header_to_bytes() {
+        let header = Header {
+            id: 0xdb42,
+            qr: true,
+            opcode: Opcode::QUERY,
+            aa: false,
+            tc: false,
+            rd: false,
+            ra: false,
+            z: 7, // z should be ignored since RFC 1035 specifies it set to 0
+            rcode: 0,
+            qdcount: 1,
+            ancount: 2,
+            nscount: 3,
+            arcount: 4,
+        };
+
+        let expected: Vec<u8> = vec![0xdb, 0x42, 0b10000000, 0b0000000, 0, 1, 0, 2, 0, 3, 0, 4];
         assert_eq!(expected, header.to_bytes());
     }
 
@@ -239,7 +284,7 @@ mod tests {
     fn parse_simple_header() {
         let extra_bytes = (0x12345678 as u32).to_be_bytes();
 
-        let mut bytes: Vec<u8> = vec![0xdb, 0x42, 0b00110000, 0b10000000, 0, 1, 0, 2, 0, 3, 0, 4];
+        let mut bytes: Vec<u8> = vec![0xdb, 0x42, 0b00000001, 0b00000011, 0, 1, 0, 2, 0, 3, 0, 4];
         bytes.extend(&extra_bytes);
 
         let header_length: usize = 12;
@@ -271,7 +316,73 @@ mod tests {
 
         let mut bytes: Vec<u8> = vec![
             // Header
-            0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 0, 0, 0,
+            0xdb, 0x42, 0b00000001, 0b00000000, 0, 1, 0, 0, 0, 0, 0, 0,
+        ];
+        bytes.extend(&extra_bytes);
+
+        let header_length: usize = 12;
+
+        let expected_header = Header {
+            id: 0xdb42,
+            qr: false,
+            opcode: Opcode::QUERY,
+            aa: false,
+            tc: false,
+            rd: true,
+            ra: false,
+            z: 0, // z should always be 0 as per RFC 1035
+            rcode: 0,
+            qdcount: 1,
+            ancount: 0,
+            nscount: 0,
+            arcount: 0,
+        };
+
+        let result = Header::parse(bytes.as_slice()).unwrap();
+        assert_eq!(header_length, result.parsed_bytes as usize);
+        assert_eq!(expected_header, result.header);
+    }
+
+    #[test]
+    fn parse_opcode_header() {
+        let extra_bytes = (0x12345678 as u32).to_be_bytes();
+
+        let mut bytes: Vec<u8> = vec![
+            // Header
+            0xdb, 0x42, 0b00001000, 0b00000000, 0, 1, 0, 0, 0, 0, 0, 0,
+        ];
+        bytes.extend(&extra_bytes);
+
+        let header_length: usize = 12;
+
+        let expected_header = Header {
+            id: 0xdb42,
+            qr: false,
+            opcode: Opcode::IQUERY,
+            aa: false,
+            tc: false,
+            rd: false,
+            ra: false,
+            z: 0, // z should always be 0 as per RFC 1035
+            rcode: 0,
+            qdcount: 1,
+            ancount: 0,
+            nscount: 0,
+            arcount: 0,
+        };
+
+        let result = Header::parse(bytes.as_slice()).unwrap();
+        assert_eq!(header_length, result.parsed_bytes as usize);
+        assert_eq!(expected_header, result.header);
+    }
+
+    #[test]
+    fn parse_qr_header() {
+        let extra_bytes = (0x12345678 as u32).to_be_bytes();
+
+        let mut bytes: Vec<u8> = vec![
+            // Header
+            0xdb, 0x42, 0b10000000, 0b00000000, 0, 1, 0, 0, 0, 0, 0, 0,
         ];
         bytes.extend(&extra_bytes);
 
@@ -283,12 +394,12 @@ mod tests {
             opcode: Opcode::QUERY,
             aa: false,
             tc: false,
-            rd: true,
+            rd: false,
             ra: false,
             z: 0, // z should always be 0 as per RFC 1035
             rcode: 0,
-            qdcount: 0,
-            ancount: 1,
+            qdcount: 1,
+            ancount: 0,
             nscount: 0,
             arcount: 0,
         };
@@ -324,7 +435,7 @@ mod tests {
 
     #[test]
     fn from_and_to_bytes_produce_orginal_input() {
-        let bytes: [u8; 12] = [0xdb, 0x42, 0b00110000, 0b10000000, 0, 1, 0, 2, 0, 3, 0, 4];
+        let bytes: [u8; 12] = [0xdb, 0x42, 0b00000001, 0b00000011, 0, 1, 0, 2, 0, 3, 0, 4];
         assert_eq!(
             bytes,
             Header::from_bytes(&bytes).unwrap().to_bytes().as_slice()

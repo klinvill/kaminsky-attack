@@ -127,7 +127,7 @@ mod tests {
 
         let mut expected: Vec<u8> = vec![
             // Header
-            0xdb, 0x42, 0b00000000, 0b10000000, 0, 1, 0, 0, 0, 0, 0, 0,
+            0xdb, 0x42, 0b00000001, 0b00000000, 0, 1, 0, 0, 0, 0, 0, 0,
         ];
         // Question
         expected.push(3);
@@ -181,7 +181,7 @@ mod tests {
 
         let mut expected: Vec<u8> = vec![
             // Header
-            0xdb, 0x42, 0b00000000, 0b10000000, 0, 2, 0, 0, 0, 0, 0, 0,
+            0xdb, 0x42, 0b00000001, 0b00000000, 0, 2, 0, 0, 0, 0, 0, 0,
         ];
         // Question for www.example.com
         expected.push(3);
@@ -214,7 +214,7 @@ mod tests {
 
         let mut bytes: Vec<u8> = vec![
             // Header
-            0xdb, 0x42, 0b00000000, 0b10000000, 0, 1, 0, 0, 0, 0, 0, 0,
+            0xdb, 0x42, 0b00000001, 0b00000000, 0, 1, 0, 0, 0, 0, 0, 0,
         ];
         // Question
         bytes.push(3);
@@ -264,7 +264,7 @@ mod tests {
 
         let mut bytes: Vec<u8> = vec![
             // Header
-            0xdb, 0x42, 0b00000000, 0b10000000, 0, 2, 0, 0, 0, 0, 0, 0,
+            0xdb, 0x42, 0b00000001, 0b00000000, 0, 2, 0, 0, 0, 0, 0, 0,
         ];
         // Question for www.example.com
         bytes.push(3);
@@ -360,7 +360,7 @@ mod tests {
 
         let mut expected: Vec<u8> = vec![
             // Header
-            0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 0, 0, 0,
+            0xdb, 0x42, 0b10000001, 0b00000000, 0, 0, 0, 1, 0, 0, 0, 0,
         ];
         // Answer
         expected.push(3);
@@ -433,7 +433,7 @@ mod tests {
 
         let mut expected: Vec<u8> = vec![
             // Header
-            0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 1, 0, 1,
+            0xdb, 0x42, 0b10000001, 0b00000000, 0, 0, 0, 1, 0, 1, 0, 1,
         ];
         // Answer
         expected.push(3);
@@ -484,7 +484,7 @@ mod tests {
 
         let mut bytes: Vec<u8> = vec![
             // Header
-            0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 0, 0, 0,
+            0xdb, 0x42, 0b10000001, 0b00000000, 0, 0, 0, 1, 0, 0, 0, 0,
         ];
         // Answer
         bytes.push(3);
@@ -540,7 +540,7 @@ mod tests {
 
         let mut bytes: Vec<u8> = vec![
             // Header
-            0xdb, 0x42, 0b00000000, 0b10000001, 0, 0, 0, 1, 0, 1, 0, 1,
+            0xdb, 0x42, 0b10000001, 0b00000000, 0, 0, 0, 1, 0, 1, 0, 1,
         ];
         // Answer
         bytes.push(3);
