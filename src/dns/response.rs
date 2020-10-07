@@ -111,6 +111,9 @@ impl Response {
         header.aa = self.authoritative_answer;
         header.ra = self.recursion_available;
         header.rcode = self.rcode;
+        header.ancount = self.answers.len() as u16;
+        header.nscount = self.authorities.len() as u16;
+        header.arcount = self.additionals.len() as u16;
 
         // TODO: reduce amount of cloning in this code
         return Ok(Message {
@@ -125,6 +128,7 @@ impl Response {
 
 #[cfg(test)]
 mod tests {
+    use crate::dns::answer::Answer;
     use crate::dns::classes::Class;
     use crate::dns::header::{Header, Opcode};
     use crate::dns::hostname::Hostname;
@@ -182,6 +186,74 @@ mod tests {
 
         let expected_message = Message {
             questions: vec![question],
+            ..Message::new(expected_header)
+        };
+
+        assert_eq!(expected_message, response.to_message().unwrap());
+    }
+
+    #[test]
+    fn response_with_answers_to_message() {
+        let header = Header {
+            id: 0x1234,
+            qr: false,
+            opcode: Opcode::QUERY,
+            aa: false,
+            tc: false,
+            rd: true,
+            ra: false,
+            z: 0,
+            rcode: 0,
+            qdcount: 1,
+            ancount: 0,
+            nscount: 0,
+            arcount: 0,
+        };
+
+        let question = Question {
+            qname: Hostname::from_string("www.example.com").unwrap(),
+            qtype: Type::A,
+            qclass: Class::IN,
+        };
+
+        let original_query = Message {
+            questions: vec![question.clone()],
+            ..Message::new(header)
+        };
+
+        let answer = Answer {
+            name: Hostname::from_string("www.example.com").unwrap(),
+            rtype: Type::A,
+            class: Class::IN,
+            ttl: 0x258,
+            rdlength: 4,
+            rdata: (0x9b211144 as u32).to_be_bytes().to_vec(),
+        };
+
+        let response = Response {
+            answers: vec![answer.clone()],
+            ..Response::new(original_query)
+        };
+
+        let expected_header = Header {
+            id: 0x1234,
+            qr: true,
+            opcode: Opcode::QUERY,
+            aa: true,
+            tc: false,
+            rd: true,
+            ra: true,
+            z: 0,
+            rcode: 0,
+            qdcount: 1,
+            ancount: 1,
+            nscount: 0,
+            arcount: 0,
+        };
+
+        let expected_message = Message {
+            questions: vec![question],
+            answers: vec![answer],
             ..Message::new(expected_header)
         };
 
