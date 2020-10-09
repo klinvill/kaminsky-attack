@@ -25,7 +25,7 @@ impl Message {
         };
     }
 
-    pub(crate) fn to_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend(self.header.to_bytes());
         bytes.extend(self.questions.iter().flat_map(|q| q.to_bytes()));

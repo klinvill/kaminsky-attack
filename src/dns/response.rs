@@ -26,16 +26,16 @@ pub enum Record {
 
 #[derive(Clone)]
 pub struct ARecord {
-    name: String,
-    ttl: u32,
-    ip: [u8; 4],
+    pub name: String,
+    pub ttl: u32,
+    pub ip: [u8; 4],
 }
 
 #[derive(Clone)]
 pub struct NSRecord {
-    name: String,
-    ttl: u32,
-    ns: String,
+    pub name: String,
+    pub ttl: u32,
+    pub ns: String,
 }
 
 impl Record {
