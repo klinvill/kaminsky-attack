@@ -51,8 +51,8 @@ impl Spoofer<'_> {
 
         return Ok(Spoofer {
             sender,
-            spoofed_port: 33333,
-            target_port: 53,
+            spoofed_port: 53,
+            target_port: 33333,
             ip_template,
         });
     }
