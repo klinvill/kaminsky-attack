@@ -71,7 +71,7 @@ impl Client {
             _ => (),
         };
 
-        println!("Bound to local address {}", socket.local_addr().unwrap());
+        eprintln!("Bound to local address {}", socket.local_addr().unwrap());
 
         let server_address = format!("{}:{}", self.server, self.port);
         match socket.connect(server_address) {
@@ -79,7 +79,7 @@ impl Client {
             _ => (),
         };
 
-        println!(
+        eprintln!(
             "Connected to remote address {}",
             socket.peer_addr().unwrap()
         );

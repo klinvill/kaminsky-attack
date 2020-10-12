@@ -20,8 +20,8 @@ const UDP_HEADER_BYTES: usize = 8;
 
 impl Spoofer<'_> {
     pub fn new<'spoof>(
-        spoofed_addr: Ipv4Addr,
-        target_addr: Ipv4Addr,
+        spoofed_addr: &Ipv4Addr,
+        target_addr: &Ipv4Addr,
         payload_size: usize,
     ) -> Result<Spoofer<'spoof>, Error> {
         // it looks like pnet modifies the initial buffer allocated for the IP packet, as a result we need to pre-allocate a large enough chunk of memory to hold the entire IP packet
@@ -40,8 +40,8 @@ impl Spoofer<'_> {
             ttl: 64,
             next_level_protocol: IpNextHeaderProtocols::Udp,
             checksum: 0, // to be calculated just before sending
-            source: spoofed_addr,
-            destination: target_addr,
+            source: *spoofed_addr,
+            destination: *target_addr,
             options: Vec::new(),
             payload: Vec::new(), // to be filled in just before sending
         });
