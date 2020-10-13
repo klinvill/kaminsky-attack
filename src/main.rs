@@ -74,12 +74,12 @@ struct Cli {
 
 #[derive(Debug)]
 enum Mode {
-    QUERY,
     /// sends a DNS query for an A record
-    SPOOF,
+    QUERY,
     /// spoofs a DNS response
-    ATTACK,
+    SPOOF,
     /// runs a Kaminsky attack
+    ATTACK,
     UNKNOWN,
 }
 
