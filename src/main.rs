@@ -13,8 +13,8 @@ struct Cli {
     ///
     /// Query mode runs a DNS query for an A record
     ///
-    /// Spoof mode spoofs a DNS response for an A record with the IP 10.1.2.3, along with an NS
-    /// record in the Authority section
+    /// Spoof mode spoofs a DNS response for an A record along with an NS record in the Authority
+    /// section
     ///
     /// Attack mode runs a Kaminsky DNS cache poisoning attack
     #[structopt(parse(from_os_str), short, long)]
@@ -23,7 +23,7 @@ struct Cli {
     // #####################################
     // ###  Arguments for multiple modes ###
     // #####################################
-    /// IP address to send spoof replies to, only valid for spoof or attack mode
+    /// IP address to send spoofed replies to, only valid for spoof or attack mode
     ///
     /// For attack mode, this specifies the server whose cache will be poisoned
     #[structopt(required_ifs(&[("mode", "attack"), ("mode", "spoof")]), parse(try_from_str), long)]
