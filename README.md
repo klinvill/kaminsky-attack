@@ -69,6 +69,6 @@ The program has three different modes that it can run in:
 You can build the executable yourself instead of using the release binaries. This can be done using Rust's package
 manager Cargo. `cargo build --release` will build the binary in release mode (which compiles with optimizations). If
 you want to build an executable for a different platform, you can use cargo build's `--target` flag to specify the
-target. For this assignment, I used the `x86_64-unknown-linux-musl` target. This target results in a statically linked
-linux binary that "just works"&trade; on linux systems.
+target. For this assignment, I used the `i686-unknown-linux-musl` target. This target results in a statically linked
+32-bit linux binary that "just works"&trade; on linux systems.
  
