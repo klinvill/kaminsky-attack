@@ -27,6 +27,9 @@ impl Spoofer<'_> {
         // it looks like pnet modifies the initial buffer allocated for the IP packet, as a result we need to pre-allocate a large enough chunk of memory to hold the entire IP packet
         let ip_payload_size = payload_size + IP_HEADER_BYTES + UDP_HEADER_BYTES;
         let data = vec![0u8; ip_payload_size];
+
+        // We use a pre-allocated MutableIpv4Packet struct in order to make it fast for repeat
+        // queries to simply modify and re-use the same struct
         let mut ip_template = MutableIpv4Packet::owned(data).unwrap();
         ip_template.populate(&Ipv4 {
             version: 4,

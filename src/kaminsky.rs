@@ -29,6 +29,7 @@ pub fn attack(
 
     let client = dns::Client::new(target_server_addr.to_string());
 
+    // Generates a random FQDN for the target domain, e.g. kjbs.example.com if targeting example.com
     let rand_fqdn = format!(
         "{}.{}",
         rand_alphanum_string(RAND_RESOURCE_LEN),
