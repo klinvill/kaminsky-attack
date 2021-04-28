@@ -57,6 +57,7 @@ impl CompressedHostnameLabel {
 }
 
 impl Hostname {
+    // TODO: use From trait instead of a separate function
     pub(crate) fn from_string(hostname: &str) -> Result<Hostname, String> {
         if !valid_hostname(hostname) {
             return Err("Invalid hostname".to_string());
@@ -148,7 +149,7 @@ mod tests {
     use crate::dns::hostname::{CompressedHostnameLabel, Hostname, HostnameLabel, Label};
 
     #[test]
-    fn test_hostname_from_hostname() {
+    fn test_hostname_from_string() {
         let expected = Hostname(vec![
             Label::NORMAL(HostnameLabel {
                 length: 3,
